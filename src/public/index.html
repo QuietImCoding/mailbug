@@ -72,7 +72,7 @@
       }
 
       async function load() {
-        const [stats, list] = await Promise.all([
+        const [stats, data] = await Promise.all([
           fetch("/api/statistics").then((r) => r.json()),
           fetch("/api/emails?limit=50").then((r) => r.json()),
         ]);
@@ -85,7 +85,7 @@
 
         const tbody = document.getElementById("emails");
         tbody.textContent = "";
-        for (const e of list.items) {
+        for (const e of data.items) {
           const tr = document.createElement("tr");
           const cells = [e.subject, e.from_address, e.category, e.priority, e.topic, fmt(e.received_at)];
           for (const text of cells) {
