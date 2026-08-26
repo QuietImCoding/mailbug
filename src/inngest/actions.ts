@@ -2,13 +2,39 @@ import { loadMailSpec } from "../config/mail-spec.ts";
 import type { MailSpec } from "../config/mail-spec.ts";
 import type { ActionMap } from "../ingest/types.ts";
 
+export interface ActionContext {
+  category?: string;
+  priority?: number;
+}
+
 export interface ActionOutput {
   delivered: boolean;
   simulated: boolean;
+  skipped?: boolean;
 }
 
 function ntfyTopic(cfg: MailSpec, category?: string): string {
   return (category && cfg.actions.ntfy?.topics?.[category]) || cfg.actions.ntfy?.defaultTopic || "mailbug";
+}
+
+// Only notify for "urgent/important" mail per config: priority at/above the
+// threshold (higher number = more urgent) and, optionally, in a listed category.
+function shouldNotify(cfg: MailSpec, ctx: ActionContext): boolean {
+  const notify = cfg.actions.ntfy?.notify;
+  if (!notify) return true;
+  if (
+    notify.minPriority != null &&
+    (ctx.priority == null || ctx.priority < notify.minPriority)
+  ) {
+    return false;
+  }
+  if (
+    notify.categories?.length &&
+    (ctx.category == null || !notify.categories.includes(ctx.category))
+  ) {
+    return false;
+  }
+  return true;
 }
 
 async function postJsonOrSimulate(
@@ -30,16 +56,21 @@ async function postJsonOrSimulate(
 }
 
 // Publishes to the configured ntfy topic for the email's category (falls back
-// to defaultTopic). The message is the request body, as the ntfy API expects.
+// to defaultTopic), only when the email is urgent enough per config. The
+// message is the request body, as the ntfy API expects.
 async function publishNtfy(
   cfg: MailSpec,
-  category: string | undefined,
+  ctx: ActionContext,
   payload: ActionMap,
 ): Promise<ActionOutput> {
   const message = Object.values(payload)[0] ?? "";
+  if (!shouldNotify(cfg, ctx)) {
+    console.log(`[ntfy] skipped (not urgent): ${message}`);
+    return { delivered: false, simulated: true, skipped: true };
+  }
   const baseUrl = cfg.actions.ntfy?.baseUrl;
   if (baseUrl) {
-    const url = `${baseUrl}/${ntfyTopic(cfg, category)}`;
+    const url = `${baseUrl}/${ntfyTopic(cfg, ctx.category)}`;
     await fetch(url, {
       method: "POST",
       headers: { title: "Mailbug" },
@@ -55,12 +86,12 @@ async function publishNtfy(
 export async function executeAction(
   actionType: string,
   payload: ActionMap,
-  category?: string,
+  ctx: ActionContext = {},
 ): Promise<ActionOutput> {
   const cfg = loadMailSpec();
   switch (actionType) {
     case "ntfy":
-      return publishNtfy(cfg, category, payload);
+      return publishNtfy(cfg, ctx, payload);
     case "add-to-calendar":
     case "webhook": {
       const url = payload.url || process.env.MAILBUG_WEBHOOK_URL;
@@ -75,7 +106,7 @@ export async function executeAction(
 export async function notify(
   actionType: string,
   payload: ActionMap,
-  category?: string,
+  ctx: ActionContext = {},
 ): Promise<ActionOutput> {
-  return publishNtfy(loadMailSpec(), category, payload);
+  return publishNtfy(loadMailSpec(), ctx, payload);
 }

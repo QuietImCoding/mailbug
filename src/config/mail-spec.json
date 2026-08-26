@@ -12,6 +12,10 @@
         "social": "mailbug-social",
         "work": "mailbug-work",
         "personal": "mailbug-personal"
+      },
+      "notify": {
+        "minPriority": 2,
+        "categories": []
       }
     },
     "add-to-calendar": { "calendar": "personal" },

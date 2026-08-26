@@ -14,6 +14,7 @@ export interface MailSpec {
       baseUrl?: string;
       defaultTopic?: string;
       topics?: Record<string, string>;
+      notify?: { minPriority?: number; categories?: string[] };
     }
   >;
   llm: { baseURL: string; model: string; maxTokens: number };

@@ -49,23 +49,28 @@ export const runAction = inngest.createFunction(
     };
 
     await step.run("mark-running", () => recordActionStatus(emailId, actionType, "running"));
-    const category = (await step.run("load-email", () =>
-      db.selectFrom("emails").select("category").where("id", "=", emailId).executeTakeFirst(),
-    ))?.category;
+    const emailRow = await step.run("load-email", () =>
+      db
+        .selectFrom("emails")
+        .select(["category", "priority"])
+        .where("id", "=", emailId)
+        .executeTakeFirst(),
+    );
+    const ctx = { category: emailRow?.category, priority: emailRow?.priority };
 
     if (actionType === "remind-me") {
       const defaultDays = cfg.actions["remind-me"]?.defaultDays ?? 3;
       const days = Number(payload.days ?? defaultDays);
       const safeDays = Number.isFinite(days) && days >= 0 ? days : defaultDays;
       await step.sleep("remind", safeDays * 86_400_000);
-      const output = await step.run("notify", () => notify("remind-me", payload, category));
+      const output = await step.run("notify", () => notify("remind-me", payload, ctx));
       await step.run("mark-done", () => recordActionStatus(emailId, actionType, "done"));
       return { ...output, remindedAfterDays: safeDays };
     }
 
     try {
       const output = await step.run(`execute:${actionType}`, () =>
-        executeAction(actionType, payload, category),
+        executeAction(actionType, payload, ctx),
       );
       await step.run("mark-done", () => recordActionStatus(emailId, actionType, "done"));
       return output;
