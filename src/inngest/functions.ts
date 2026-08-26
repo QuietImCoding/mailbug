@@ -36,9 +36,9 @@ export const ingestEmails = inngest.createFunction(
       // Use the messageId in each step ID so parallel per-email chains don't collide.
       const id = email.messageId;
       try {
-        const c = await step.run(`classify:${id}`, () => classifyEmail(email, cfg));
-        const emailId = await step.run(`store:${id}`, () => storeEmail(email, c));
-        await step.run(`dispatch:${id}`, () => dispatchActions(emailId, c.actions));
+        const { classification, llm } = await step.run(`classify:${id}`, () => classifyEmail(email, cfg));
+        const emailId = await step.run(`store:${id}`, () => storeEmail(email, classification, llm));
+        await step.run(`dispatch:${id}`, () => dispatchActions(emailId, classification.actions));
         processed++;
       } catch (err) {
         // validation/LLM failure → refresh the stored content if the row exists,

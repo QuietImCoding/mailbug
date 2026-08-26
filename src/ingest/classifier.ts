@@ -85,10 +85,29 @@ export function mockClassify(email: RawEmail, cfg: MailSpec): Classification {
   return { category, priority, topic, actions };
 }
 
+// The model's own output, kept alongside the parsed classification so the UI
+// can show what it thought (reasoning) and what it returned.
+export interface LlmMeta {
+  model: string;
+  raw: string;
+  reasoning?: string;
+}
+
+export interface ClassifyResult {
+  classification: Classification;
+  llm?: LlmMeta;
+}
+
+// DeepSeek/Qwen endpoints expose chain-of-thought as a non-standard
+// `reasoning_content` field the OpenAI SDK types don't declare.
+interface ReasoningMessage extends OpenAI.Chat.Completions.ChatCompletionMessage {
+  reasoning_content?: string;
+}
+
 export async function classifyEmail(
   email: RawEmail,
   cfg: MailSpec,
-): Promise<Classification> {
+): Promise<ClassifyResult> {
   // Test override: an `override-category: <cat>` marker in the body forces the
   // category unconditionally, bypassing classification entirely.
   const override = /override-category:\s*(\S+)/i.exec(email.bodyText);
@@ -99,10 +118,12 @@ export async function classifyEmail(
       topic: "override",
       actions: [],
     };
-    return classificationSchema(cfg).parse(parsed);
+    return { classification: classificationSchema(cfg).parse(parsed) };
   }
 
   let parsed: unknown;
+
+  let llm: LlmMeta | undefined;
 
   if (process.env.DEEPSEEK_API_KEY) {
     const baseURL = process.env.DEEPSEEK_BASE_URL ?? cfg.llm.baseURL;
@@ -144,13 +165,15 @@ export async function classifyEmail(
       );
     }
     const cleaned = raw.replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
+    const message = resp.choices[0]?.message as ReasoningMessage | undefined;
+    llm = { model, raw: cleaned, reasoning: message?.reasoning_content };
     parsed = JSON.parse(cleaned);
   } else {
     parsed = mockClassify(email, cfg);
   }
 
   try {
-    return classificationSchema(cfg).parse(parsed);
+    return { classification: classificationSchema(cfg).parse(parsed), llm };
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     throw new Error(`classification failed for message ${email.messageId}: ${detail}`);

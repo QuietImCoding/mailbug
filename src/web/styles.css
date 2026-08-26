@@ -246,14 +246,16 @@ body {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 22px;
+  /* Match the wordmark headline: same size and colour, no fade. */
+  font-size: clamp(42px, 6.2vw, 82px);
   line-height: 1;
-  opacity: 0.6;
+  color: var(--orange);
+  opacity: 1;
 }
 
 .settings-button:hover,
 .settings-button:focus-visible {
-  opacity: 1;
+  color: var(--orange-ink);
 }
 
 .modal.settings {

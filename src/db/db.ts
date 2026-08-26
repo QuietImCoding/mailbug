@@ -63,6 +63,7 @@ export async function initDb(): Promise<void> {
   // `createTable(...).ifNotExists()` is a no-op on an existing database, so
   // columns added after the first release need their own idempotent ALTER.
   await addColumnIfMissing("emails", "to_address");
+  await addColumnIfMissing("emails", "llm_json");
 
   await db.schema
     .createIndex("emails_category")

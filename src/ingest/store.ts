@@ -2,11 +2,13 @@ import { randomUUID } from "node:crypto";
 import { db } from "../db/db.ts";
 import type { EmailActionRow } from "../db/schema.ts";
 import { inngest } from "../inngest/client.ts";
+import type { LlmMeta } from "./classifier.ts";
 import type { ActionMap, Classification, RawEmail } from "./types.ts";
 
 export async function storeEmail(
   email: RawEmail,
   c: Classification,
+  llm?: LlmMeta,
 ): Promise<string> {
   const existing = await db
     .selectFrom("emails")
@@ -16,6 +18,7 @@ export async function storeEmail(
   if (existing) {
     // Re-ingest refreshes the content (so a better text/plain extraction shows
     // up) without churning the classification or its stored actions.
+    const updated = llm ? { llm_json: JSON.stringify(llm) } : {};
     await db
       .updateTable("emails")
       .set({
@@ -25,6 +28,7 @@ export async function storeEmail(
         to_address: email.toAddress ?? "",
         received_at: email.receivedAt || new Date().toISOString(),
         body_text: email.bodyText,
+        ...(updated.llm_json !== undefined ? { llm_json: updated.llm_json } : {}),
       })
       .where("id", "=", existing.id)
       .execute();
@@ -49,6 +53,7 @@ export async function storeEmail(
       topic: c.topic,
       body_text: email.bodyText,
       raw_json: JSON.stringify(c),
+      llm_json: llm ? JSON.stringify(llm) : "",
       created_at: now,
     })
     .execute();
