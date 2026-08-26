@@ -8,7 +8,7 @@ export interface RawEmail {
   bodyText: string;
 }
 
-// Single-key record, e.g. { "ntfy": "..." }
+// Single-key record, e.g. { "page-user": "..." }
 export type ActionMap = Record<string, string>;
 
 export interface Classification {

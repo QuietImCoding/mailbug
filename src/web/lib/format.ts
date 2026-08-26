@@ -38,7 +38,7 @@ export function initials(
   return name[0] || "?";
 }
 
-/** Action payloads are single-key JSON records, e.g. `{"ntfy":"..."}`. */
+/** Action payloads are single-key JSON records, e.g. `{"page-user":"..."}`. */
 export function actionMessage(action: EmailAction): string {
   try {
     return (

@@ -17,10 +17,6 @@ export interface MailSpec {
       calendar?: string;
       defaultDays?: number;
       url?: string;
-      baseUrl?: string;
-      defaultTopic?: string;
-      topics?: Record<string, string>;
-      notify?: { maxPriority?: number; categories?: string[] };
       defaultLevel?: string;
     }
   >;
