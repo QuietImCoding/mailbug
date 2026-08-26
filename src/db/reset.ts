@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { existsSync, unlinkSync } from "node:fs";
 import { initDb } from "./db.ts";
 
