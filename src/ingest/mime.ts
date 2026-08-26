@@ -41,6 +41,23 @@ function paramOf(headerValue: string, name: string): string | undefined {
   );
   return match ? (match[2] ?? match[1]) : undefined;
 }
+// Some senders base64-encode a body but forget (or wrongly set) the
+// `Content-Transfer-Encoding` header, so decode on content when it clearly is
+// base64: a non-trivial, correctly padded run of base64 alphabet that actually
+// decodes to mostly-printable text.
+function looksLikeBase64(text: string): boolean {
+  const compact = text.replace(/\s+/g, "");
+  if (compact.length < 8 || compact.length % 4 !== 0) return false;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(compact)) return false;
+  try {
+    const decoded = Buffer.from(compact, "base64").toString("utf8");
+    if (decoded.length === 0) return false;
+    const printable = decoded.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "").length;
+    return printable / decoded.length >= 0.7;
+  } catch {
+    return false;
+  }
+}
 
 function decodeBytes(body: string, encoding: string, charset: string): string {
   const enc = encoding.toLowerCase();
@@ -63,6 +80,8 @@ function decodeBytes(body: string, encoding: string, charset: string): string {
       }
     }
     bytes = Buffer.from(out);
+  } else if (looksLikeBase64(body)) {
+    bytes = Buffer.from(body.replace(/\s+/g, ""), "base64");
   } else {
     return body;
   }
@@ -142,9 +161,23 @@ export function parseMessage(raw: string): ParsedMessage {
 /** Raw message source (or already-plain text) in, readable prose out. */
 export function extractPlainText(raw: string): string {
   if (!raw) return "";
-  if (!looksLikeRfc822(raw)) return tidy(raw);
-  const text = parseMessage(raw).text;
-  return text || tidy(raw);
+  const { headers, body } = splitHeaders(raw);
+  const hasHeaders = Object.keys(headers).length > 0;
+  if (!hasHeaders) return tidy(raw);
+
+  const text = partText(raw);
+  if (text) return text;
+
+  // Multipart parsing came up empty — decode the body directly, auto-detecting
+  // base64, and strip HTML if present. Never fall back to the raw message
+  // (which would leak every header into the body).
+  const encoding = headers["content-transfer-encoding"] ?? "7bit";
+  const contentType = headers["content-type"] ?? "text/plain";
+  const charset = paramOf(contentType, "charset") ?? "utf-8";
+  const decoded = decodeBytes(body, encoding, charset);
+  return /^text\/html/i.test(contentType)
+    ? tidy(htmlToText(decoded))
+    : tidy(decoded);
 }
 
 /** `"Stream" <stream@stream.place>` -> `stream@stream.place`. */

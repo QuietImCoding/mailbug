@@ -2,7 +2,7 @@ import { loadMailSpec } from "../config/mail-spec.ts";
 import { db } from "../db/db.ts";
 import { classifyEmail } from "../ingest/classifier.ts";
 import { getMailSource } from "../ingest/source.ts";
-import { dispatchActions, recordActionStatus, storeEmail } from "../ingest/store.ts";
+import { dispatchActions, recordActionStatus, refreshEmailContent, storeEmail } from "../ingest/store.ts";
 import type { ActionMap } from "../ingest/types.ts";
 import {
   executeCalendar,
@@ -36,8 +36,10 @@ export const ingestEmails = inngest.createFunction(
         await step.run(`dispatch:${id}`, () => dispatchActions(emailId, c.actions));
         processed++;
       } catch (err) {
-        // validation/LLM failure → skip, don't fail the run
+        // validation/LLM failure → refresh the stored content if the row exists,
+        // then skip the rest so the run doesn't fail.
         console.error("skipped email", email.messageId, err);
+        await step.run(`refresh-body:${id}`, () => refreshEmailContent(email));
       }
     }
 

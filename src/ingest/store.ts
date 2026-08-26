@@ -13,7 +13,23 @@ export async function storeEmail(
     .select("id")
     .where("message_id", "=", email.messageId)
     .executeTakeFirst();
-  if (existing) return existing.id;
+  if (existing) {
+    // Re-ingest refreshes the content (so a better text/plain extraction shows
+    // up) without churning the classification or its stored actions.
+    await db
+      .updateTable("emails")
+      .set({
+        subject: email.subject,
+        from_address: email.fromAddress,
+        from_name: email.fromName,
+        to_address: email.toAddress ?? "",
+        received_at: email.receivedAt || new Date().toISOString(),
+        body_text: email.bodyText,
+      })
+      .where("id", "=", existing.id)
+      .execute();
+    return existing.id;
+  }
 
   const id = randomUUID();
   const now = new Date().toISOString();
@@ -52,6 +68,30 @@ export async function storeEmail(
   }
 
   return id;
+}
+// Refreshes only the content (subject/from/to/date/body) for an email that
+// already exists, without touching its classification or stored actions. Used
+// when a re-ingest fetched fresh content but classification failed.
+export async function refreshEmailContent(email: RawEmail): Promise<string> {
+  const existing = await db
+    .selectFrom("emails")
+    .select("id")
+    .where("message_id", "=", email.messageId)
+    .executeTakeFirst();
+  if (!existing) return "";
+  await db
+    .updateTable("emails")
+    .set({
+      subject: email.subject,
+      from_address: email.fromAddress,
+      from_name: email.fromName,
+      to_address: email.toAddress ?? "",
+      received_at: email.receivedAt || new Date().toISOString(),
+      body_text: email.bodyText,
+    })
+    .where("id", "=", existing.id)
+    .execute();
+  return existing.id;
 }
 
 export async function recordActionStatus(
