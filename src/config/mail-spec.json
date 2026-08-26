@@ -1,0 +1,12 @@
+{
+  "categories": ["marketing", "finance", "updates", "social", "work", "personal"],
+  "priorities": [1, 2, 3],
+  "actions": {
+    "ntfy": { "topic": "mailbug" },
+    "add-to-calendar": { "calendar": "personal" },
+    "remind-me": { "defaultDays": 3 },
+    "webhook": { "url": "" }
+  },
+  "llm": { "baseURL": "https://api.deepseek.com", "model": "deepseek-chat", "maxTokens": 512 },
+  "ingestion": { "cron": "*/5 * * * *" }
+}
