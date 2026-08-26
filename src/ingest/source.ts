@@ -1,5 +1,3 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { ImapFlow } from "imapflow";
 import { extractPlainText } from "./mime.ts";
 import type { RawEmail } from "./types.ts";
@@ -12,25 +10,10 @@ export function getMailSource(): MailSource {
   if (process.env.MAILBUG_IMAP_HOST && process.env.MAILBUG_IMAP_USER) {
     return new ImapMailSource();
   }
-  return new FixtureMailSource();
-}
-
-export class FixtureMailSource implements MailSource {
-  async fetchSince(since: Date): Promise<RawEmail[]> {
-    const dir = fileURLToPath(new URL("../fixtures/emails", import.meta.url));
-    let files: string[];
-    try {
-      files = readdirSync(dir).filter((f) => f.endsWith(".json"));
-    } catch {
-      return []; // no fixture directory
-    }
-    const results: RawEmail[] = [];
-    for (const f of files) {
-      const raw = JSON.parse(readFileSync(`${dir}/${f}`, "utf8")) as RawEmail;
-      if (new Date(raw.receivedAt) >= since) results.push(raw);
-    }
-    return results;
-  }
+  // Fixtures were removed; without IMAP there is nothing to poll. Archived
+  // emails already in the database stay visible.
+  console.warn("mailbug: no IMAP configured — live ingestion disabled");
+  return { fetchSince: async () => [] };
 }
 
 function normalizeDate(value: Date | string | undefined): Date | undefined {
