@@ -137,7 +137,9 @@ export function EmailRow({
 
   // The list item's actions are refreshed on every load, so they are never
   // staler than the cached detail's copy.
-  const actions = email.actions ?? detail?.actions ?? [];
+  const actions = (email.actions ?? detail?.actions ?? []).filter(
+    (action) => action.action_type !== "page-user",
+  );
 
   return (
     <div
@@ -201,10 +203,10 @@ export function EmailRow({
           <div className="meta">
             {shortFmt.format(new Date(email.received_at))}
           </div>
-          {email.actions[0] ? (
+          {actions[0] ? (
             <ActionChip
               email={email}
-              action={email.actions[0]}
+              action={actions[0]}
               expanded={false}
               onToast={onToast}
               onTrigger={onTrigger}

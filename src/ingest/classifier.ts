@@ -77,7 +77,7 @@ export function mockClassify(email: RawEmail, cfg: MailSpec): Classification {
   const topicWords = email.subject.trim().split(/\s+/).slice(0, 3).join(" ");
   const topic = topicWords.toLowerCase() || "untitled";
 
-  const actionKey = cfg.actions.ntfy ? "ntfy" : Object.keys(cfg.actions)[0];
+  const actionKey = cfg.actions["page-user"] ? "page-user" : Object.keys(cfg.actions)[0];
   const actions: ActionMap[] = [{ [actionKey]: `${category.toUpperCase()} EMAIL` }];
 
   return { category, priority, topic, actions };

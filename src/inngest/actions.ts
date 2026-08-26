@@ -13,14 +13,18 @@ export interface ActionOutput {
   skipped?: boolean;
 }
 
-function ntfyTopic(cfg: MailSpec, category?: string): string {
-  return (category && cfg.actions.ntfy?.topics?.[category]) || cfg.actions.ntfy?.defaultTopic || "mailbug";
+function pageUserTopic(cfg: MailSpec, category?: string): string {
+  return (
+    (category && cfg.actions["page-user"]?.topics?.[category]) ||
+    cfg.actions["page-user"]?.defaultTopic ||
+    "mailbug"
+  );
 }
 
 // Only notify for "urgent/important" mail per config: priority at/above the
 // threshold (higher number = more urgent) and, optionally, in a listed category.
 function shouldNotify(cfg: MailSpec, ctx: ActionContext): boolean {
-  const notify = cfg.actions.ntfy?.notify;
+  const notify = cfg.actions["page-user"]?.notify;
   if (!notify) return true;
   if (
     notify.minPriority != null &&
@@ -55,39 +59,39 @@ async function postJsonOrSimulate(
   return { delivered: false, simulated: true };
 }
 
-// Publishes to the configured ntfy topic for the email's category (falls back
-// to defaultTopic), only when the email is urgent enough per config. The
-// message is the request body, as the ntfy API expects.
-async function publishNtfy(
+// Pages the user: publishes to the configured topic for the email's category
+// (falls back to defaultTopic), only when the email is urgent enough per config.
+// The message is the request body, as the ntfy API expects.
+async function publishPageUser(
   cfg: MailSpec,
   ctx: ActionContext,
   payload: ActionMap,
 ): Promise<ActionOutput> {
   const message = Object.values(payload)[0] ?? "";
   if (!shouldNotify(cfg, ctx)) {
-    console.log(`[ntfy] skipped (not urgent): ${message}`);
+    console.log(`[page-user] skipped (not urgent): ${message}`);
     return { delivered: false, simulated: true, skipped: true };
   }
-  const baseUrl = cfg.actions.ntfy?.baseUrl;
+  const baseUrl = cfg.actions["page-user"]?.baseUrl;
   if (baseUrl) {
-    const url = `${baseUrl}/${ntfyTopic(cfg, ctx.category)}`;
+    const url = `${baseUrl}/${pageUserTopic(cfg, ctx.category)}`;
     await fetch(url, {
       method: "POST",
       headers: { title: "Mailbug" },
       body: message,
     });
-    console.log(`[ntfy] published to ${url}`);
+    console.log(`[page-user] published to ${url}`);
     return { delivered: true, simulated: false };
   }
-  console.log(`[ntfy] ${message}`);
+  console.log(`[page-user] ${message}`);
   return { delivered: false, simulated: true };
 }
 
-export async function executeNtfy(
+export async function executePageUser(
   payload: ActionMap,
   ctx: ActionContext,
 ): Promise<ActionOutput> {
-  return publishNtfy(loadMailSpec(), ctx, payload);
+  return publishPageUser(loadMailSpec(), ctx, payload);
 }
 
 export async function executeCalendar(
@@ -106,46 +110,10 @@ export async function executeWebhook(
   return postJsonOrSimulate(url, "webhook", payload);
 }
 
-// Sends a push via the Bark service (https://github.com/Finb/Bark). The device
-// key comes from env (MAILBUG_BARK_KEY); the message is the URL path segment
-// (any "/" URL-encodes automatically) and any extra payload keys become query
-// params, e.g. { message: "Server is down", level: "critical", volume: "10" }
-// → https://api.day.app/<key>/Server%20is%20down?level=critical&volume=10
-export async function executePageUser(
-  payload: ActionMap,
-  ctx: ActionContext,
-): Promise<ActionOutput> {
-  const key = process.env.MAILBUG_BARK_KEY;
-  const message = Object.values(payload)[0] ?? "";
-  if (!key) {
-    console.log(`[page-user] simulated (no MAILBUG_BARK_KEY): ${message}`);
-    return { delivered: false, simulated: true };
-  }
-
-  // Encode the message as a single path segment (spaces and slashes → %20/%2F).
-  const pathSegment = encodeURIComponent(message);
-  const base = `https://api.day.app/${key}/${pathSegment}`;
-
-  // Extra payload keys beyond the message become URL query params.
-  const params = new URLSearchParams();
-  const cfg = loadMailSpec();
-  const defaultLevel = cfg.actions["page-user"]?.defaultLevel ?? "critical";
-  params.set("level", payload.level ?? defaultLevel);
-  for (const [k, v] of Object.entries(payload)) {
-    if (k !== "level") params.set(k, v);
-  }
-  const query = params.toString();
-  const url = query ? `${base}?${query}` : base;
-
-  await fetch(url);
-  console.log(`[page-user] pushed to ${url}`);
-  return { delivered: true, simulated: false };
-}
-
-// Used by the remind-me function after sleeping. Notifies like ntfy.
+// Used by the remind-me function after sleeping. Pages the user like page-user.
 export async function notify(
   payload: ActionMap,
   ctx: ActionContext,
 ): Promise<ActionOutput> {
-  return publishNtfy(loadMailSpec(), ctx, payload);
+  return publishPageUser(loadMailSpec(), ctx, payload);
 }

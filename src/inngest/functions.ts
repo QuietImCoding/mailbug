@@ -6,7 +6,6 @@ import { dispatchActions, recordActionStatus, storeEmail } from "../ingest/store
 import type { ActionMap } from "../ingest/types.ts";
 import {
   executeCalendar,
-  executeNtfy,
   executePageUser,
   executeWebhook,
   notify,
@@ -80,20 +79,20 @@ function logActionCall(
   });
 }
 
-export const runNtfyAction = inngest.createFunction(
-  { id: "run-action-ntfy", triggers: [{ event: "mailbug/action.ntfy" }] },
+export const runPageUserAction = inngest.createFunction(
+  { id: "run-action-page-user", triggers: [{ event: "mailbug/action.page-user" }] },
   async ({ event, step }) => {
     const { emailId, payload } = event.data as ActionEvent;
     const ctx = await loadEmailCtx(emailId);
-    logActionCall("ntfy", emailId, payload, ctx);
+    logActionCall("page-user", emailId, payload, ctx);
 
-    await step.run("mark-running", () => recordActionStatus(emailId, "ntfy", "running"));
+    await step.run("mark-running", () => recordActionStatus(emailId, "page-user", "running"));
     try {
-      const output = await step.run("execute", () => executeNtfy(payload, ctx));
-      await step.run("mark-done", () => recordActionStatus(emailId, "ntfy", "done"));
+      const output = await step.run("execute", () => executePageUser(payload, ctx));
+      await step.run("mark-done", () => recordActionStatus(emailId, "page-user", "done"));
       return output;
     } catch (err) {
-      await step.run("mark-failed", () => recordActionStatus(emailId, "ntfy", "failed"));
+      await step.run("mark-failed", () => recordActionStatus(emailId, "page-user", "failed"));
       throw err;
     }
   },
@@ -137,25 +136,6 @@ export const runWebhookAction = inngest.createFunction(
   },
 );
 
-export const runPageUserAction = inngest.createFunction(
-  { id: "run-action-page-user", triggers: [{ event: "mailbug/action.page-user" }] },
-  async ({ event, step }) => {
-    const { emailId, payload } = event.data as ActionEvent;
-    const ctx = await loadEmailCtx(emailId);
-    logActionCall("page-user", emailId, payload, ctx);
-
-    await step.run("mark-running", () => recordActionStatus(emailId, "page-user", "running"));
-    try {
-      const output = await step.run("execute", () => executePageUser(payload, ctx));
-      await step.run("mark-done", () => recordActionStatus(emailId, "page-user", "done"));
-      return output;
-    } catch (err) {
-      await step.run("mark-failed", () => recordActionStatus(emailId, "page-user", "failed"));
-      throw err;
-    }
-  },
-);
-
 export const runRemindMeAction = inngest.createFunction(
   { id: "run-action-remind-me", triggers: [{ event: "mailbug/action.remind-me" }] },
   async ({ event, step }) => {
@@ -181,9 +161,8 @@ export const runRemindMeAction = inngest.createFunction(
 );
 
 export const actionFunctions = [
-  runNtfyAction,
+  runPageUserAction,
   runCalendarAction,
   runWebhookAction,
-  runPageUserAction,
   runRemindMeAction,
 ];

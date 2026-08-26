@@ -7,13 +7,9 @@
     "work",
     "personal"
   ],
-  "priorities": [
-    1,
-    2,
-    3
-  ],
+  "priorities": [1, 2, 3],
   "actions": {
-    "ntfy": {
+    "page-user": {
       "baseUrl": "https://ntfy.sh",
       "defaultTopic": "mailbug",
       "topics": {
@@ -27,12 +23,12 @@
       "notify": {
         "minPriority": 2,
         "categories": []
-      }
+      },
+      "defaultLevel": "critical"
     },
     "add-to-calendar": { "calendar": "personal" },
     "remind-me": { "defaultDays": 3 },
-    "webhook": { "url": "" },
-    "page-user": { "defaultLevel": "critical" }
+    "webhook": { "url": "" }
   },
   "llm": {
     "baseURL": "https://api.deepseek.com",

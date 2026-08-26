@@ -89,7 +89,7 @@ function blob(overrides: Record<string, unknown> = {}) {
       category: "marketing",
       priority: 1,
       topic: "shoes sale",
-      actions: [{ ntfy: "NEW MARKETING EMAIL" }],
+      actions: [{ "page-user": "NEW MARKETING EMAIL" }],
     },
     ...overrides,
   };
@@ -107,7 +107,7 @@ test("POST /api/ingest skips an invalid blob", async () => {
         category: "nope",
         priority: 9,
         topic: "x",
-        actions: [{ ntfy: 5 }],
+        actions: [{ "page-user": 5 }],
       },
     }),
   );
@@ -176,7 +176,7 @@ test("GET /api/emails/:id returns the email with its actions", async () => {
   const res = await fetch(`${base}/api/emails/${id}`).then((r) => r.json());
   assert.equal(res.subject, "50% off shoes");
   assert.equal(res.actions.length, 1);
-  assert.equal(res.actions[0].action_type, "ntfy");
+  assert.equal(res.actions[0].action_type, "page-user");
   assert.equal(res.actions[0].status, "pending");
 });
 
@@ -194,7 +194,7 @@ test("GET /api/emails/:id 404s for unknown id", async () => {
 test("GET /api/emails returns each email's actions inline", async () => {
   const { items } = await list("?category=marketing");
   assert.equal(items[0].actions.length, 1);
-  assert.equal(items[0].actions[0].action_type, "ntfy");
+  assert.equal(items[0].actions[0].action_type, "page-user");
 });
 
 test("blocking a sender hides their mail from the inbox", async () => {
@@ -335,7 +335,7 @@ test("POST /api/emails/:id/actions validates actionType and email", async () => 
   const missing = await fetch(`${base}/api/emails/does-not-exist/actions`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ actionType: "ntfy" }),
+    body: JSON.stringify({ actionType: "page-user" }),
   });
   assert.equal(missing.status, 404);
 });
