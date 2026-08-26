@@ -15,6 +15,7 @@ import {
 } from "./lib/api.ts";
 import { EmailRow } from "./components/EmailRow.tsx";
 import { InboxControls, type InboxQuery } from "./components/InboxControls.tsx";
+import { OverviewPanel } from "./components/OverviewPanel.tsx";
 import { SettingsModal } from "./components/SettingsModal.tsx";
 import { Toast, useToast } from "./components/Toast.tsx";
 import { WidgetRail } from "./components/WidgetRail.tsx";
@@ -65,6 +66,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<Set<string>>(() => new Set());
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [overviewOpen, setOverviewOpen] = useState(false);
 
   const [openId, setOpenId] = useHashId();
   const { toast, show } = useToast();
@@ -188,7 +190,17 @@ export function App() {
         <button
           type="button"
           className="settings-button"
+          aria-label="Overview"
+          title="Overview"
+          onClick={() => setOverviewOpen(true)}
+        >
+          ☰
+        </button>
+        <button
+          type="button"
+          className="settings-button"
           aria-label="Settings"
+          title="Settings"
           onClick={() => setSettingsOpen(true)}
         >
           ⚙
@@ -237,6 +249,7 @@ export function App() {
       {settingsOpen ? (
         <SettingsModal onClose={() => setSettingsOpen(false)} onSaved={show} />
       ) : null}
+      {overviewOpen ? <OverviewPanel onClose={() => setOverviewOpen(false)} /> : null}
 
       <Toast toast={toast} />
     </>

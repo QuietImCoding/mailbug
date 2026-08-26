@@ -357,6 +357,68 @@ textarea.field {
   cursor: default;
 }
 
+/* Overview (d3) modal ------------------------------------------------------ */
+
+.modal.overview {
+  width: min(680px, 94vw);
+}
+
+.stat-total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.stat-num {
+  font: 700 44px/1 var(--font-display);
+  color: var(--orange);
+}
+
+.stat-label {
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+.chart-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-block h3,
+.senders h3 {
+  margin: 8px 0 6px;
+  font: 600 14px/1 var(--font-display);
+  opacity: 0.7;
+}
+
+.chart-block .chart {
+  display: block;
+}
+
+.senders ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.senders li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.senders .sender-count {
+  font-weight: 700;
+  color: var(--orange);
+}
+
 /* Codes ------------------------------------------------------------------- */
 
 .codes {
