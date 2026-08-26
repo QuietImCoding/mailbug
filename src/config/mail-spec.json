@@ -1,11 +1,35 @@
 {
   "categories": [
-    "marketing",
-    "finance",
-    "updates",
-    "social",
-    "work",
-    "personal"
+    {
+      "key": "marketing",
+      "prompt": "Advertisements, sales offers, discounts, coupons, product launches, newsletters pushing content, or anything soliciting a purchase.",
+      "priority": 5
+    },
+    {
+      "key": "finance",
+      "prompt": "Invoices, receipts, payment confirmations, billing statements, subscription renewals, bank or credit-card notices, tax documents, or overdue-payment reminders.",
+      "priority": 2
+    },
+    {
+      "key": "updates",
+      "prompt": "Product/feature announcements, release notes, changelogs, service or outage updates, terms-of-service changes, or security advisories and alerts.",
+      "priority": 1
+    },
+    {
+      "key": "social",
+      "prompt": "Notifications from social networks: likes, comments, mentions, friend or connection requests, direct messages, or forum activity.",
+      "priority": 4
+    },
+    {
+      "key": "work",
+      "prompt": "Meetings and calendar invites, deadlines, project updates, standups, code reviews, task assignments, internal team threads, or anything from a colleague or workplace system.",
+      "priority": 1
+    },
+    {
+      "key": "personal",
+      "prompt": "Personal correspondence from family or friends, and the fallback for mail that does not clearly fit another category.",
+      "priority": 3
+    }
   ],
   "priorities": [1, 2, 3, 4, 5],
   "actions": {
@@ -36,8 +60,8 @@
     "maxTokens": 2048
   },
   "prompt": {
-    "instructions": "Classify this email. Return ONLY a JSON object matching the response shape. Category must be one of the listed categories, priority one of the listed priorities, topic a short label, and each action key one of the available actions.",
-    "responseShape": "{\"category\":\"<one of the categories>\",\"priority\":<one of the priorities>,\"topic\":\"<short label>\",\"actions\":[{\"<actionType>\":\"<short message>\"}]}"
+    "instructions": "Classify this email. Return ONLY a JSON object matching the response shape. Choose exactly one category key from the list, using its prompt to decide. Assign the priority listed for that category (or override if the mail is clearly more/less important). Topic is a short label, and each action key must be one of the available actions.",
+    "responseShape": "{\"category\":\"<one of the category keys>\",\"priority\":<the category's listed priority or an override>,\"topic\":\"<short label>\",\"actions\":[{\"<actionType>\":\"<short message>\"}]}"
   },
   "ingestion": {
     "cron": "*/5 * * * *",

@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+export interface CategorySpec {
+  key: string;
+  prompt: string;
+  priority: number;
+}
+
 export interface MailSpec {
-  categories: string[];
+  categories: CategorySpec[];
   priorities: number[];
   actions: Record<
     string,

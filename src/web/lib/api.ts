@@ -140,7 +140,7 @@ export async function triggerAction(
   if (!res.ok) throw new Error(`could not trigger ${actionType}`);
 }
 export interface MailConfig {
-  categories: string[];
+  categories: Array<{ key: string; prompt: string; priority: number }>;
   priorities: number[];
   prompt: { instructions: string; responseShape: string };
 }
@@ -149,7 +149,7 @@ export const fetchConfig = () => get<MailConfig>("/api/config");
 
 export async function saveConfig(
   config: {
-    categories: string[];
+    categories: MailConfig["categories"];
     priorities: number[];
     prompt: MailConfig["prompt"];
   },

@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { fetchConfig, saveConfig } from "../lib/api.ts";
+import type { MailConfig } from "../lib/api.ts";
+
+type Category = MailConfig["categories"][number];
 
 export function SettingsModal({
   onClose,
@@ -8,11 +11,10 @@ export function SettingsModal({
   onClose: () => void;
   onSaved: (message: string) => void;
 }) {
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [priorities, setPriorities] = useState<number[]>([]);
   const [instructions, setInstructions] = useState("");
   const [responseShape, setResponseShape] = useState("");
-  const [newCategory, setNewCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -34,15 +36,17 @@ export function SettingsModal({
     };
   }, []);
 
-  const addCategory = () => {
-    const value = newCategory.trim().toLowerCase();
-    if (!value) return;
-    if (!categories.includes(value)) setCategories((prev) => [...prev, value]);
-    setNewCategory("");
-  };
+  const updateCategory = (index: number, next: Category) =>
+    setCategories((prev) => prev.map((c, i) => (i === index ? next : c)));
 
-  const removeCategory = (category: string) =>
-    setCategories((prev) => prev.filter((c) => c !== category));
+  const addCategory = () =>
+    setCategories((prev) => [
+      ...prev,
+      { key: "", prompt: "", priority: priorities[0] ?? 1 },
+    ]);
+
+  const removeCategory = (index: number) =>
+    setCategories((prev) => prev.filter((_, i) => i !== index));
 
   const save = async () => {
     setSaving(true);
@@ -117,32 +121,53 @@ export function SettingsModal({
           />
 
           <label className="field-label">Categories</label>
-          <div className="category-list">
-            {categories.map((category) => (
-              <span className="category-chip" key={category}>
-                {category}
+          <div className="category-editor">
+            {categories.map((category, i) => (
+              <div className="category-row" key={i}>
+                <input
+                  className="field cat-key"
+                  value={category.key}
+                  placeholder="key"
+                  aria-label={`category ${i + 1} key`}
+                  onChange={(event) =>
+                    updateCategory(i, { ...category, key: event.target.value })
+                  }
+                />
+                <input
+                  className="field cat-priority"
+                  type="number"
+                  value={category.priority}
+                  aria-label={`category ${i + 1} priority`}
+                  onChange={(event) =>
+                    updateCategory(i, {
+                      ...category,
+                      priority: Number(event.target.value),
+                    })
+                  }
+                />
+                <textarea
+                  className="field cat-prompt"
+                  rows={2}
+                  value={category.prompt}
+                  placeholder="how to decide — shown to the LLM"
+                  aria-label={`category ${i + 1} prompt`}
+                  onChange={(event) =>
+                    updateCategory(i, { ...category, prompt: event.target.value })
+                  }
+                />
                 <button
                   type="button"
-                  aria-label={`Remove ${category}`}
-                  onClick={() => removeCategory(category)}
+                  className="cat-remove"
+                  aria-label={`Remove ${category.key || i + 1}`}
+                  onClick={() => removeCategory(i)}
                 >
                   ×
                 </button>
-              </span>
+              </div>
             ))}
-            <span className="category-add">
-              <input
-                value={newCategory}
-                placeholder="add category"
-                onChange={(event) => setNewCategory(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") addCategory();
-                }}
-              />
-              <button type="button" onClick={addCategory}>
-                add
-              </button>
-            </span>
+            <button type="button" className="cat-add" onClick={addCategory}>
+              + add category
+            </button>
           </div>
 
           <div className="modal-actions">

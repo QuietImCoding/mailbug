@@ -5,7 +5,7 @@ import type { ActionMap, Classification, RawEmail } from "./types.ts";
 
 export function classificationSchema(cfg: MailSpec): z.ZodType<Classification> {
   return z.object({
-    category: z.enum(cfg.categories as [string, ...string[]]),
+    category: z.enum(cfg.categories.map((c) => c.key) as [string, ...string[]]),
     priority: z.number().refine((p) => cfg.priorities.includes(p)),
     topic: z.string().min(1),
     actions: z
@@ -32,7 +32,8 @@ function buildPrompt(email: RawEmail, cfg: MailSpec): string {
   return [
     instructions,
     "",
-    `Categories: ${cfg.categories.join(", ")}`,
+    "Category definitions (key — priority — how to decide):",
+    ...cfg.categories.map((c) => `  ${c.key} (${c.priority}): ${c.prompt}`),
     `Priorities: ${cfg.priorities.join(", ")}`,
     `Available actions: ${Object.keys(cfg.actions).join(", ")}`,
     `Email subject: ${email.subject}`,
@@ -67,11 +68,12 @@ export function mockClassify(email: RawEmail, cfg: MailSpec): Classification {
       break;
     }
   }
-  if (!cfg.categories.includes(category)) category = "personal";
+  if (!cfg.categories.some((c) => c.key === category)) category = "personal";
 
-  const requestedPriority = category === "marketing" ? 1 : 2;
-  const priority = cfg.priorities.includes(requestedPriority)
-    ? requestedPriority
+  const catSpec = cfg.categories.find((c) => c.key === category);
+  const categoryPriority = catSpec?.priority ?? cfg.priorities[0];
+  const priority = cfg.priorities.includes(categoryPriority)
+    ? categoryPriority
     : cfg.priorities[0];
 
   const topicWords = email.subject.trim().split(/\s+/).slice(0, 3).join(" ");
@@ -90,7 +92,7 @@ export async function classifyEmail(
   // Test override: an `override-category: <cat>` marker in the body forces the
   // category unconditionally, bypassing classification entirely.
   const override = /override-category:\s*(\S+)/i.exec(email.bodyText);
-  if (override && cfg.categories.includes(override[1])) {
+  if (override && cfg.categories.some((c) => c.key === override[1])) {
     const parsed = {
       category: override[1],
       priority: cfg.priorities.includes(2) ? 2 : cfg.priorities[0],

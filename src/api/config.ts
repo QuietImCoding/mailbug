@@ -11,7 +11,11 @@ import {
 // The UI edits the prompt instructions and the category/priority lists. The
 // other sections (actions, llm, ingestion) are preserved as-is on write.
 const configUpdateSchema = z.object({
-  categories: z.array(z.string().min(1)).min(1),
+  categories: z.array(z.object({
+    key: z.string().min(1),
+    prompt: z.string(),
+    priority: z.number().int(),
+  })).min(1),
   priorities: z.array(z.number().int().min(0)).min(1),
   prompt: z.object({
     instructions: z.string(),

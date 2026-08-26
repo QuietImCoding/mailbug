@@ -282,52 +282,44 @@ textarea.field {
   resize: vertical;
 }
 
-.category-list {
+.category-editor {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-row {
+  display: grid;
+  grid-template-columns: 130px 70px 1fr 28px;
   gap: 8px;
-  align-items: center;
+  align-items: start;
 }
 
-.category-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--orange);
-  color: var(--paper);
-  font: 500 13px/1 var(--font-display);
+.category-row .cat-key,
+.category-row .cat-priority {
+  padding: 8px 10px;
 }
 
-.category-chip button {
+.category-row .cat-prompt {
+  width: 100%;
+}
+
+.cat-remove {
   appearance: none;
   border: none;
   background: none;
-  color: inherit;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1;
+  margin-top: 8px;
 }
 
-.category-add {
-  display: inline-flex;
-  gap: 6px;
-}
-
-.category-add input {
-  width: 150px;
-  padding: 6px 8px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  font: 13px/1 var(--font-display);
-}
-
-.category-add button {
+.cat-add {
   appearance: none;
   border: none;
   cursor: pointer;
-  padding: 6px 12px;
+  align-self: flex-start;
+  padding: 8px 12px;
   border-radius: 6px;
   background: var(--orange);
   color: var(--paper);
