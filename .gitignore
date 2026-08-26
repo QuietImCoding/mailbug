@@ -1,3 +1,4 @@
 node_modules
 mailbug.db
 .env
+test-mailbug.db

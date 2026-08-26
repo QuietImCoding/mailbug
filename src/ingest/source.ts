@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { ImapFlow } from "imapflow";
+import { extractPlainText } from "./mime.ts";
 import type { RawEmail } from "./types.ts";
 
 export interface MailSource {
@@ -46,8 +47,16 @@ export class ImapMailSource implements MailSource {
     const port = Number(process.env.MAILBUG_IMAP_PORT ?? 993);
     const secure = process.env.MAILBUG_IMAP_SECURE !== "false";
 
-    console.log(`Starting ImapMailSource host=${host} port=${port} secure=${secure} user=${user}`)
-    const client = new ImapFlow({ host, port, secure, auth: { user, pass }, logger: false });
+    console.log(
+      `Starting ImapMailSource host=${host} port=${port} secure=${secure} user=${user}`,
+    );
+    const client = new ImapFlow({
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+      logger: false,
+    });
     const results: RawEmail[] = [];
     let connected = false;
 
@@ -69,8 +78,11 @@ export class ImapMailSource implements MailSource {
             subject: msg.envelope.subject ?? "",
             fromAddress: msg.envelope.from?.[0]?.address ?? "",
             fromName: msg.envelope.from?.[0]?.name ?? "",
+            toAddress: msg.envelope.to?.[0]?.address ?? "",
             receivedAt: internal.toISOString(),
-            bodyText: msg.source?.toString("utf8") ?? "",
+            // Store the readable prose, not the raw MIME source: it is what the
+            // dashboard shows and what the classifier reasons over.
+            bodyText: extractPlainText(msg.source?.toString("utf8") ?? ""),
           });
         }
       } finally {

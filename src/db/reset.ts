@@ -1,11 +1,10 @@
 import "dotenv/config";
 import { existsSync, unlinkSync } from "node:fs";
-import { initDb } from "./db.ts";
-
-const DB_FILE = "mailbug.db";
+import { DB_FILE, initDb } from "./db.ts";
 
 try {
-  if (existsSync(DB_FILE)) unlinkSync(DB_FILE);
+  const file = DB_FILE();
+  if (existsSync(file)) unlinkSync(file);
 } catch {
   // best-effort removal; the DB is recreated by initDb() below
 }

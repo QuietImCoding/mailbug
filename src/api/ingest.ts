@@ -12,6 +12,7 @@ interface IngestBlob {
   subject: string;
   fromAddress: string;
   fromName?: string;
+  toAddress?: string;
   receivedAt: string;
   bodyText?: string;
   classification: Classification;
@@ -39,6 +40,7 @@ ingestRouter.post("/ingest", async (req, res) => {
         subject: blob.subject,
         fromAddress: blob.fromAddress,
         fromName: blob.fromName ?? "",
+        toAddress: blob.toAddress ?? "",
         receivedAt: blob.receivedAt,
         bodyText: blob.bodyText ?? "",
       };

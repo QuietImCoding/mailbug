@@ -3,6 +3,7 @@ export interface RawEmail {
   subject: string;
   fromAddress: string;
   fromName: string;
+  toAddress?: string;
   receivedAt: string; // ISO
   bodyText: string;
 }

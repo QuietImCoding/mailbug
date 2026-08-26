@@ -1,0 +1,557 @@
+/* Mailbug dashboard — colours and proportions sampled from Daniel's mockups. */
+
+:root {
+  --bg: #d6e1e0;
+  --orange: #e16918;
+  --orange-ink: #e46c1b;
+  --paper: #ffffff;
+
+  /* Priority ramp. Every row themes itself off --pri. */
+  --pri-high: #c90000;
+  --pri-mid: #c98400;
+  --pri-low: #64c900;
+
+  --frame: 6px;
+  --gap: 28px;
+
+  --font-display: "Comfortaa", "Trebuchet MS", system-ui, sans-serif;
+  --font-tech: "Genos", "Comfortaa", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 34px clamp(18px, 4vw, 64px) 64px;
+  background: var(--bg);
+  color: var(--orange-ink);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- wordmark */
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: var(--gap);
+}
+
+.wordmark img {
+  width: clamp(56px, 7vw, 92px);
+  height: auto;
+}
+
+.wordmark h1 {
+  margin: 0;
+  font-size: clamp(42px, 6.2vw, 82px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--orange);
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------------ frames */
+
+.frame {
+  border: var(--frame) solid var(--orange);
+  border-radius: 6px;
+  padding: 26px;
+  margin-bottom: var(--gap);
+}
+
+/* ------------------------------------------------------------ widget rail */
+
+.rail {
+  display: flex;
+  align-items: stretch;
+  gap: 34px;
+  min-height: 160px;
+}
+
+.rail > * {
+  flex: 0 0 auto;
+}
+
+.rail .slot-fill {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--paper);
+  font-size: clamp(20px, 2.4vw, 38px);
+  text-align: center;
+  opacity: 0.95;
+}
+
+/* Vertical rule between widgets, as in the mockup. */
+.rail .divider {
+  width: var(--frame);
+  border-radius: 3px;
+  background: var(--orange);
+  align-self: stretch;
+  margin: 4px 0;
+}
+
+/* Calendar ---------------------------------------------------------------- */
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 190px;
+}
+
+.calendar .month {
+  background: var(--orange);
+  color: var(--paper);
+  text-align: center;
+  padding: 3px 0 5px;
+  font-size: 20px;
+  border-radius: 2px;
+}
+
+.calendar .days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar .day {
+  height: 18px;
+  border-radius: 2px;
+  background: var(--orange);
+  opacity: 0.3;
+  position: relative;
+}
+
+.calendar .day.pad {
+  background: none;
+}
+
+/* Any mail at all fills the cell; busier days deepen. Days with a calendar
+   action get a paper notch. */
+.calendar .day[data-load="1"] {
+  opacity: 0.8;
+}
+.calendar .day[data-load="2"] {
+  opacity: 0.9;
+}
+.calendar .day[data-load="3"] {
+  opacity: 1;
+}
+
+.calendar .day.has-event::after {
+  content: "";
+  position: absolute;
+  inset: 5px 6px;
+  border-radius: 1px;
+  background: var(--paper);
+}
+
+.calendar .day.today {
+  outline: 3px solid var(--orange);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+/* Codes ------------------------------------------------------------------- */
+
+.codes {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.code-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.code-item .label {
+  font-size: clamp(15px, 1.5vw, 23px);
+}
+
+.code-item .value {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  background: var(--orange);
+  color: var(--paper);
+  border-radius: 999px;
+  padding: 4px 34px 7px;
+  font-family: var(--font-tech);
+  font-size: clamp(28px, 3.2vw, 52px);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+}
+
+.code-item .value:hover {
+  filter: brightness(1.08);
+}
+
+.code-item .value.copied::after {
+  content: " ✓";
+}
+
+/* --------------------------------------------------------------- controls */
+
+.inbox-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  margin-bottom: 18px;
+  font-size: 20px;
+}
+
+.inbox-controls .count {
+  margin-right: auto;
+  opacity: 0.75;
+  font-size: 17px;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.control svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+select,
+.ghost-button {
+  appearance: none;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-bottom: 3px solid transparent;
+}
+
+select:hover,
+.ghost-button:hover,
+select:focus-visible,
+.ghost-button:focus-visible {
+  border-bottom-color: currentColor;
+  outline: none;
+}
+
+/* ------------------------------------------------------------------- rows */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+}
+
+.row {
+  --pri: var(--pri-mid);
+  border: var(--frame) solid var(--pri);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--pri);
+  cursor: pointer;
+}
+
+.row[data-pri="high"] {
+  --pri: var(--pri-high);
+}
+.row[data-pri="mid"] {
+  --pri: var(--pri-mid);
+}
+.row[data-pri="low"] {
+  --pri: var(--pri-low);
+}
+
+.row:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+
+.row-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 10px;
+}
+
+.avatar {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid var(--pri);
+  background: color-mix(in srgb, var(--pri) 24%, var(--paper));
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.subject {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-tech);
+  font-size: clamp(19px, 2vw, 30px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-head .meta {
+  flex: 0 0 auto;
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+.action-chip {
+  flex: 0 0 auto;
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  background: var(--pri);
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: clamp(15px, 1.5vw, 22px);
+  padding: 5px 20px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.action-chip:hover {
+  filter: brightness(1.12);
+}
+
+/* --------------------------------------------------------- expanded email */
+
+.row.open {
+  cursor: default;
+}
+
+.row.open .row-head {
+  align-items: flex-start;
+  padding: 18px 20px 4px;
+  gap: 22px;
+}
+
+.row.open .avatar {
+  width: 96px;
+  height: 96px;
+  border-width: 5px;
+  font-size: 40px;
+}
+
+.row.open .headings {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.row.open .subject {
+  white-space: normal;
+  font-size: clamp(22px, 2.6vw, 40px);
+}
+
+.addresses {
+  margin-top: 4px;
+  font-size: clamp(14px, 1.4vw, 21px);
+  line-height: 1.5;
+}
+
+.addresses .line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.priority-badge {
+  flex: 0 0 auto;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.4vw, 38px);
+  white-space: nowrap;
+}
+
+/* Octagonal "block this sender" stop button with the mockup's speech bubble.
+   The clip-path lives on the inner span: on the button it would also clip the
+   tooltip that hangs outside its 19px box. */
+.block-sender {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  line-height: 0;
+}
+
+.block-sender .stop {
+  display: block;
+  width: 19px;
+  height: 19px;
+  background: var(--pri);
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+}
+
+.block-sender:hover .stop,
+.block-sender:focus-visible .stop {
+  filter: brightness(1.25);
+}
+
+.block-sender::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translateX(-42%);
+  width: 148px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fbd3d3;
+  color: var(--pri-high);
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.25;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+/* Tail pointing back down at the stop sign. */
+.block-sender::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 1px);
+  width: 15px;
+  height: 14px;
+  transform: translateX(-50%);
+  background: #fbd3d3;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.block-sender:hover::after,
+.block-sender:focus-visible::after,
+.block-sender:hover::before,
+.block-sender:focus-visible::before {
+  opacity: 1;
+}
+
+.body {
+  padding: 16px 22px 4px;
+  font-size: clamp(15px, 1.55vw, 24px);
+  line-height: 1.55;
+  max-height: 46vh;
+  overflow-y: auto;
+}
+
+.body p {
+  margin: 0 0 1em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.row-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 22px 20px;
+}
+
+.row-footer .action-chip {
+  border-radius: 12px;
+  padding: 10px 26px 13px;
+  text-align: left;
+  font-size: clamp(15px, 1.55vw, 24px);
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.row-footer .action-chip .sub {
+  display: block;
+  opacity: 0.85;
+}
+
+/* -------------------------------------------------------------- utilities */
+
+.empty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  font-size: 22px;
+  opacity: 0.6;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translate(-50%, 160%);
+  visibility: hidden;
+  background: var(--orange);
+  color: var(--paper);
+  padding: 10px 24px 13px;
+  border-radius: 999px;
+  font-size: 18px;
+  transition:
+    transform 0.22s ease,
+    visibility 0.22s;
+  z-index: 10;
+}
+
+.toast.show {
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+@media (max-width: 760px) {
+  .rail {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .rail .divider {
+    display: none;
+  }
+  .rail .slot-fill {
+    display: none;
+  }
+  .row-head .meta {
+    display: none;
+  }
+}

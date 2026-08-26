@@ -26,6 +26,7 @@ export async function storeEmail(
       subject: email.subject,
       from_address: email.fromAddress,
       from_name: email.fromName,
+      to_address: email.toAddress ?? "",
       received_at: email.receivedAt || now,
       category: c.category,
       priority: c.priority,

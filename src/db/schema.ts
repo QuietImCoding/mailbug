@@ -4,6 +4,7 @@ export interface EmailRow {
   subject: string;
   from_address: string;
   from_name: string;
+  to_address: string;
   received_at: string;
   category: string;
   priority: number;
@@ -22,7 +23,13 @@ export interface EmailActionRow {
   created_at: string;
 }
 
+export interface BlockedSenderRow {
+  address: string;
+  blocked_at: string;
+}
+
 export interface DB {
   emails: EmailRow;
   email_actions: EmailActionRow;
+  blocked_senders: BlockedSenderRow;
 }

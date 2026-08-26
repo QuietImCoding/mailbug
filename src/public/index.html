@@ -1,103 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mailbug</title>
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; }
-      h1 { margin-bottom: 0.25rem; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-      .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
-      .card h3 { margin-top: 0; }
-      .num { font-size: 2rem; font-weight: 700; }
-      .muted { color: #777; }
-      table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-      th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #eee; }
-      th { background: #f7f7f7; }
-      ul.tops { padding-left: 1.2rem; }
-    </style>
+    <link rel="icon" href="/assets/mailbug.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;700&family=Genos:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <h1>Mailbug</h1>
-    <p class="muted">Email organization overview</p>
+    <header class="wordmark">
+      <img src="/assets/mailbug.png" alt="" />
+      <h1>Mailbug</h1>
+    </header>
 
-    <h2>Summary</h2>
-    <div class="grid">
-      <div class="card">
-        <h3>Total emails</h3>
-        <div class="num" id="total">–</div>
+    <section class="frame rail" id="rail" aria-label="Widgets">
+      <div class="calendar" id="calendar"></div>
+      <div class="divider"></div>
+      <div class="codes" id="codes"></div>
+      <div class="slot-fill">widgets go here</div>
+    </section>
+
+    <section class="frame" aria-label="Inbox">
+      <div class="inbox-controls">
+        <span class="count" id="count"></span>
+
+        <label class="control" for="filter">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+          </svg>
+          <select id="filter" aria-label="Filter by category">
+            <option value="">all</option>
+          </select>
+        </label>
+
+        <label class="control" for="sort">
+          <select id="sort" aria-label="Sort by">
+            <option value="priority">pri</option>
+            <option value="received_at">date</option>
+            <option value="from_address">sender</option>
+            <option value="category">category</option>
+          </select>
+        </label>
+
+        <button
+          class="ghost-button"
+          id="order"
+          type="button"
+          aria-label="Toggle sort direction"
+        >
+          ↓
+        </button>
       </div>
-      <div class="card">
-        <h3>By category</h3>
-        <ul class="tops" id="byCategory"></ul>
-      </div>
-      <div class="card">
-        <h3>By priority</h3>
-        <ul class="tops" id="byPriority"></ul>
-      </div>
-    </div>
 
-    <h2>Top senders</h2>
-    <ul class="tops" id="senders"></ul>
-    <h2>Top topics</h2>
-    <ul class="tops" id="topics"></ul>
+      <div class="rows" id="rows"></div>
+    </section>
 
-    <h2>Recent emails</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th>Sender</th>
-          <th>Category</th>
-          <th>Priority</th>
-          <th>Topic</th>
-          <th>Received</th>
-        </tr>
-      </thead>
-      <tbody id="emails"></tbody>
-    </table>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script>
-      const fmt = (iso) => (iso ? new Date(iso).toLocaleString() : "");
-
-      function list(id, values, labelFn) {
-        const el = document.getElementById(id);
-        el.textContent = "";
-        for (const v of values) {
-          const li = document.createElement("li");
-          li.textContent = labelFn(v);
-          el.appendChild(li);
-        }
-      }
-
-      async function load() {
-        const [stats, data] = await Promise.all([
-          fetch("/api/statistics").then((r) => r.json()),
-          fetch("/api/emails?limit=50").then((r) => r.json()),
-        ]);
-
-        document.getElementById("total").textContent = stats.total ?? 0;
-        list("byCategory", stats.byCategory, (c) => `${c.category}: ${c.count}`);
-        list("byPriority", stats.byPriority, (p) => `priority ${p.priority}: ${p.count}`);
-        list("senders", stats.topSenders, (s) => `${s.sender}: ${s.count}`);
-        list("topics", stats.topTopics, (t) => `${t.topic}: ${t.count}`);
-
-        const tbody = document.getElementById("emails");
-        tbody.textContent = "";
-        for (const e of data.items) {
-          const tr = document.createElement("tr");
-          const cells = [e.subject, e.from_address, e.category, e.priority, e.topic, fmt(e.received_at)];
-          for (const text of cells) {
-            const td = document.createElement("td");
-            td.textContent = text;
-            tr.appendChild(td);
-          }
-          tbody.appendChild(tr);
-        }
-      }
-
-      load();
-    </script>
+    <script type="module" src="/app.js"></script>
   </body>
 </html>

@@ -1,6 +1,8 @@
 import { Router } from "express";
+import { loadMailSpec } from "../config/mail-spec.ts";
 import { db } from "../db/db.ts";
 import type { DB } from "../db/schema.ts";
+import { addressOf, extractPlainText, parseMessage } from "../ingest/mime.ts";
 
 export const statisticsRouter = Router();
 
@@ -45,7 +47,18 @@ statisticsRouter.get("/statistics", async (_req, res) => {
     .limit(10)
     .execute();
 
-  res.json({ total, byCategory, byPriority, topSenders, topTopics });
+  // The dashboard colours each row by where its priority falls in the configured
+  // range, so it needs the range itself rather than just the observed values.
+  const priorities = loadMailSpec().priorities;
+
+  res.json({
+    total,
+    byCategory,
+    byPriority,
+    topSenders,
+    topTopics,
+    priorities,
+  });
 });
 
 const EMAIL_LIST_COLUMNS = [
@@ -59,6 +72,29 @@ const EMAIL_LIST_COLUMNS = [
   "topic",
 ] as const;
 
+// Rows render their action as a chip ("add to cal"), so the list endpoint
+// returns each email's actions inline instead of forcing a fetch per row.
+async function withActions<T extends { id: string }>(rows: T[]) {
+  if (rows.length === 0) return [];
+  const actions = await db
+    .selectFrom("email_actions")
+    .select(["email_id", "action_type", "payload", "status"])
+    .where(
+      "email_id",
+      "in",
+      rows.map((r) => r.id),
+    )
+    .execute();
+
+  const byEmail = new Map<string, typeof actions>();
+  for (const a of actions) {
+    const list = byEmail.get(a.email_id) ?? [];
+    list.push(a);
+    byEmail.set(a.email_id, list);
+  }
+  return rows.map((r) => ({ ...r, actions: byEmail.get(r.id) ?? [] }));
+}
+
 statisticsRouter.get("/emails", async (req, res) => {
   const category = req.query.category ? String(req.query.category) : undefined;
   const sender = req.query.sender ? String(req.query.sender) : undefined;
@@ -68,7 +104,13 @@ statisticsRouter.get("/emails", async (req, res) => {
   const page = Math.max(Number(req.query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
 
-  const sortCols = ["received_at", "priority", "category", "from_address", "topic"];
+  const sortCols = [
+    "received_at",
+    "priority",
+    "category",
+    "from_address",
+    "topic",
+  ];
   const sort = (sortCols as string[]).includes(sortRaw)
     ? (sortRaw as keyof DB["emails"])
     : "received_at";
@@ -78,16 +120,35 @@ statisticsRouter.get("/emails", async (req, res) => {
   if (category) q = q.where("category", "=", category);
   if (sender) q = q.where("from_address", "=", sender);
   if (topic) q = q.where("topic", "=", topic);
+  // Blocking a sender hides their mail from the inbox without deleting history,
+  // so the stats endpoint still counts it. `includeBlocked=1` opts back in.
+  if (req.query.includeBlocked !== "1") {
+    q = q.where((eb) =>
+      eb.not(
+        eb.exists(
+          eb
+            .selectFrom("blocked_senders")
+            .select("blocked_senders.address")
+            .whereRef("blocked_senders.address", "=", "emails.from_address"),
+        ),
+      ),
+    );
+  }
 
-  const totalRow = await q.select(db.fn.countAll().as("count")).executeTakeFirst();
+  const totalRow = await q
+    .select(db.fn.countAll().as("count"))
+    .executeTakeFirst();
   const total = Number(totalRow?.count ?? 0);
 
-  const items = await q
+  const rows = await q
     .select([...EMAIL_LIST_COLUMNS])
     .orderBy(sort, order)
+    .orderBy("id", "asc")
     .offset((page - 1) * limit)
     .limit(limit)
     .execute();
+
+  const items = await withActions(rows);
 
   res.json({ items, page, limit, total });
 });
@@ -108,5 +169,14 @@ statisticsRouter.get("/emails/:id", async (req, res) => {
     .selectAll()
     .where("email_id", "=", id)
     .execute();
-  res.json({ ...email, actions });
+
+  // Rows ingested before the MIME extractor landed still hold raw message
+  // source, so unpack on read as well as on write.
+  const parsed = parseMessage(email.body_text);
+  const body_text = parsed.text || extractPlainText(email.body_text);
+  const to_address =
+    email.to_address ||
+    addressOf(parsed.headers["to"] ?? parsed.headers["delivered-to"]);
+
+  res.json({ ...email, body_text, to_address, actions });
 });
