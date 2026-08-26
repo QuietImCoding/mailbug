@@ -27,8 +27,10 @@ ingestRouter.post("/ingest", async (req, res) => {
   let skipped = 0;
 
   for (const blob of blobs) {
+    let emailId: string;
+    let classification: Classification;
     try {
-      const classification = schema.parse({
+      classification = schema.parse({
         ...blob.classification,
         topic: blob.classification.topic || "uncategorized",
       });
@@ -40,11 +42,17 @@ ingestRouter.post("/ingest", async (req, res) => {
         receivedAt: blob.receivedAt,
         bodyText: blob.bodyText ?? "",
       };
-      const emailId = await storeEmail(email, classification);
-      await dispatchActions(emailId, classification.actions);
-      stored++;
+      emailId = await storeEmail(email, classification);
     } catch {
       skipped++;
+      continue;
+    }
+
+    stored++;
+    try {
+      await dispatchActions(emailId, classification.actions);
+    } catch (err) {
+      console.error("dispatch failed for", emailId, err);
     }
   }
 

@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "INNGEST_DEV=1 tsx src/mailbug.ts",
+    "dev": "INNGEST_DEV=1 tsx src/server.ts",
     "db:reset": "tsx src/db/reset.ts",
     "typecheck": "tsc --noEmit"
   },

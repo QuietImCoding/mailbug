@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mailbug</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; color: #222; }
+      h1 { margin-bottom: 0.25rem; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+      .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+      .card h3 { margin-top: 0; }
+      .num { font-size: 2rem; font-weight: 700; }
+      .muted { color: #777; }
+      table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+      th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #eee; }
+      th { background: #f7f7f7; }
+      ul.tops { padding-left: 1.2rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Mailbug</h1>
+    <p class="muted">Email organization overview</p>
+
+    <h2>Summary</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Total emails</h3>
+        <div class="num" id="total">–</div>
+      </div>
+      <div class="card">
+        <h3>By category</h3>
+        <ul class="tops" id="byCategory"></ul>
+      </div>
+      <div class="card">
+        <h3>By priority</h3>
+        <ul class="tops" id="byPriority"></ul>
+      </div>
+    </div>
+
+    <h2>Top senders</h2>
+    <ul class="tops" id="senders"></ul>
+    <h2>Top topics</h2>
+    <ul class="tops" id="topics"></ul>
+
+    <h2>Recent emails</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Sender</th>
+          <th>Category</th>
+          <th>Priority</th>
+          <th>Topic</th>
+          <th>Received</th>
+        </tr>
+      </thead>
+      <tbody id="emails"></tbody>
+    </table>
+
+    <script>
+      const fmt = (iso) => (iso ? new Date(iso).toLocaleString() : "");
+
+      function list(id, values, labelFn) {
+        const el = document.getElementById(id);
+        el.textContent = "";
+        for (const v of values) {
+          const li = document.createElement("li");
+          li.textContent = labelFn(v);
+          el.appendChild(li);
+        }
+      }
+
+      async function load() {
+        const [stats, list] = await Promise.all([
+          fetch("/api/statistics").then((r) => r.json()),
+          fetch("/api/emails?limit=50").then((r) => r.json()),
+        ]);
+
+        document.getElementById("total").textContent = stats.total ?? 0;
+        list("byCategory", stats.byCategory, (c) => `${c.category}: ${c.count}`);
+        list("byPriority", stats.byPriority, (p) => `priority ${p.priority}: ${p.count}`);
+        list("senders", stats.topSenders, (s) => `${s.sender}: ${s.count}`);
+        list("topics", stats.topTopics, (t) => `${t.topic}: ${t.count}`);
+
+        const tbody = document.getElementById("emails");
+        tbody.textContent = "";
+        for (const e of list.items) {
+          const tr = document.createElement("tr");
+          const cells = [e.subject, e.from_address, e.category, e.priority, e.topic, fmt(e.received_at)];
+          for (const text of cells) {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        }
+      }
+
+      load();
+    </script>
+  </body>
+</html>

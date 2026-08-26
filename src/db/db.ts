@@ -42,7 +42,7 @@ export async function initDb(): Promise<void> {
     .addColumn("created_at", "text", (col) => col.notNull().defaultTo(""))
     .execute();
 
-  await db.schema.createIndex("emails_category").on("emails").column("category").execute();
-  await db.schema.createIndex("emails_sender").on("emails").column("from_address").execute();
-  await db.schema.createIndex("emails_topic").on("emails").column("topic").execute();
+  await db.schema.createIndex("emails_category").ifNotExists().on("emails").column("category").execute();
+  await db.schema.createIndex("emails_sender").ifNotExists().on("emails").column("from_address").execute();
+  await db.schema.createIndex("emails_topic").ifNotExists().on("emails").column("topic").execute();
 }
