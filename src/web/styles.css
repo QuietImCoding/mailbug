@@ -153,12 +153,9 @@ body {
   opacity: 1;
 }
 
-.calendar .day.has-event::after {
-  content: "";
-  position: absolute;
-  inset: 5px 6px;
-  border-radius: 1px;
-  background: var(--paper);
+/* Days with a calendar action get a bolder date number; the cell stays orange. */
+.calendar .day.has-event .day-num {
+  font-weight: 800;
 }
 
 .calendar .day.today {
