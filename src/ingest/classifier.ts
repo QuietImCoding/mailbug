@@ -79,6 +79,19 @@ export async function classifyEmail(
   email: RawEmail,
   cfg: MailSpec,
 ): Promise<Classification> {
+  // Test override: an `override-category: <cat>` marker in the body forces the
+  // category unconditionally, bypassing classification entirely.
+  const override = /override-category:\s*(\S+)/i.exec(email.bodyText);
+  if (override && cfg.categories.includes(override[1])) {
+    const parsed = {
+      category: override[1],
+      priority: cfg.priorities.includes(2) ? 2 : cfg.priorities[0],
+      topic: "override",
+      actions: [],
+    };
+    return classificationSchema(cfg).parse(parsed);
+  }
+
   let parsed: unknown;
 
   if (process.env.DEEPSEEK_API_KEY) {

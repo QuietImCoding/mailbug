@@ -7,6 +7,7 @@ import type { ActionMap } from "../ingest/types.ts";
 import {
   executeCalendar,
   executeNtfy,
+  executePageUser,
   executeWebhook,
   notify,
   type ActionContext,
@@ -135,6 +136,25 @@ export const runWebhookAction = inngest.createFunction(
   },
 );
 
+export const runPageUserAction = inngest.createFunction(
+  { id: "run-action-page-user", triggers: [{ event: "mailbug/action.page-user" }] },
+  async ({ event, step }) => {
+    const { emailId, payload } = event.data as ActionEvent;
+    const ctx = await loadEmailCtx(emailId);
+    logActionCall("page-user", emailId, payload, ctx);
+
+    await step.run("mark-running", () => recordActionStatus(emailId, "page-user", "running"));
+    try {
+      const output = await step.run("execute", () => executePageUser(payload, ctx));
+      await step.run("mark-done", () => recordActionStatus(emailId, "page-user", "done"));
+      return output;
+    } catch (err) {
+      await step.run("mark-failed", () => recordActionStatus(emailId, "page-user", "failed"));
+      throw err;
+    }
+  },
+);
+
 export const runRemindMeAction = inngest.createFunction(
   { id: "run-action-remind-me", triggers: [{ event: "mailbug/action.remind-me" }] },
   async ({ event, step }) => {
@@ -162,5 +182,6 @@ export const actionFunctions = [
   runNtfyAction,
   runCalendarAction,
   runWebhookAction,
+  runPageUserAction,
   runRemindMeAction,
 ];

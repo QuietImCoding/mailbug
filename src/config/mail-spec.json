@@ -20,7 +20,8 @@
     },
     "add-to-calendar": { "calendar": "personal" },
     "remind-me": { "defaultDays": 3 },
-    "webhook": { "url": "" }
+    "webhook": { "url": "" },
+    "page-user": { "defaultLevel": "critical" }
   },
   "llm": { "baseURL": "https://api.deepseek.com", "model": "deepseek-chat", "maxTokens": 2048 },
   "ingestion": { "cron": "*/5 * * * *" }
