@@ -19,3 +19,9 @@ app.use(express.static(new URL("./public", import.meta.url).pathname));
 
 const port = Number(process.env.PORT ?? 3000);
 app.listen(port, () => console.log(`mailbug listening on :${port}`));
+
+// Fire the ingest once on boot so we don't have to wait for the cron schedule.
+await inngest.send({
+  name: "mailbug/ingest.run",
+  ts: Date.now(),
+});

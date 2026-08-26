@@ -46,6 +46,7 @@ export class ImapMailSource implements MailSource {
     const port = Number(process.env.MAILBUG_IMAP_PORT ?? 993);
     const secure = process.env.MAILBUG_IMAP_SECURE !== "false";
 
+    console.log(`Starting ImapMailSource host=${host} port=${port} secure=${secure} user=${user}`)
     const client = new ImapFlow({ host, port, secure, auth: { user, pass }, logger: false });
     const results: RawEmail[] = [];
     let connected = false;
