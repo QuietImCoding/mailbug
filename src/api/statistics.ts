@@ -29,7 +29,7 @@ statisticsRouter.get("/statistics", async (_req, res) => {
 
   const topSenders = await db
     .selectFrom("emails")
-    .select(["from_address"])
+    .select((eb) => [eb.ref("from_address").as("sender")])
     .select(db.fn.countAll().as("count"))
     .groupBy("from_address")
     .orderBy("count", "desc")
