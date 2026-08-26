@@ -1,4 +1,4 @@
-import { inngest } from "./client.ts";
+import { inngest } from "./inngest/client.ts";
 import { serve } from "inngest/express";
 import express from "express";
 
