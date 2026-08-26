@@ -1,4 +1,5 @@
 import { inngest } from "./client.ts";
+import { serve } from "inngest/express";
 import express from "express";
 
 export const retrieveTextFile = inngest.createFunction(
@@ -19,26 +20,27 @@ export const retrieveTextFile = inngest.createFunction(
   },
 );
 
-await inngest.send({
-  // Use an id specific to the event type & payload
-  id: `retrieveTextFile`,
-  name: "textFile/retrieve",
-  // user: { external_id: "6463da8211cdbbcb191dd7da" },
-  ts: Date.now(),
-  // v: "2024-05-15.1"
-});
-
 const app = express();
 const port = 3000;
+
+// Required so the serve handler can read incoming JSON POST payloads
+app.use(express.json());
+
+// Registers the functions with Inngest — this is the endpoint the dev server polls
+app.use("/api/inngest", serve({ client: inngest, functions: [retrieveTextFile] }));
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.listen(port, (err) => {
-  if (err) {
-    console.error(err);
-    return;
-  }
+// Trigger the event on demand, after the functions are registered
+app.get("/send", async (req, res, next) => {
+  await inngest
+    .send({ name: "textFile/retrieve", ts: Date.now() })
+    .catch(next);
+  res.send("Event sent!");
+});
+
+app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
