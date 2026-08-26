@@ -74,6 +74,13 @@ export function App() {
   const [openId, setOpenId] = useHashId();
   const { toast, show } = useToast();
 
+  // Poll frequently: single-user sqlite, so a short 3s interval keeps new email
+  // visible quickly. Bumping `reloadKey` re-runs the fetch effect below.
+  useEffect(() => {
+    const t = setInterval(() => setReloadKey((k) => k + 1), 3000);
+    return () => clearInterval(t);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setError(null);
