@@ -54,7 +54,9 @@ function useHashId(): [string | null, (id: string | null) => void] {
 export function App() {
   const [query, setQuery] = useState<InboxQuery>({
     sort: "priority",
-    order: "desc",
+    // Priority 1 is most urgent, so ascending order surfaces the most urgent
+    // email first (3 → 2 → 1 would be backwards).
+    order: "asc",
     category: "",
   });
   const [reloadKey, setReloadKey] = useState(0);
