@@ -25,7 +25,7 @@ export function priorityBucket(
 ): PriorityBucket {
   const min = Math.min(...priorities);
   const max = Math.max(...priorities);
-  const norm = max === min ? 0.5 : (priority - min) / (max - min);
+  const norm = max === min ? 0.5 : (max - priority) / (max - min);
   if (norm >= 0.66) return "high";
   if (norm >= 0.34) return "mid";
   return "low";

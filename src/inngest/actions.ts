@@ -27,8 +27,8 @@ function shouldNotify(cfg: MailSpec, ctx: ActionContext): boolean {
   const notify = cfg.actions["page-user"]?.notify;
   if (!notify) return true;
   if (
-    notify.minPriority != null &&
-    (ctx.priority == null || ctx.priority < notify.minPriority)
+    notify.maxPriority != null &&
+    (ctx.priority == null || ctx.priority > notify.maxPriority)
   ) {
     return false;
   }

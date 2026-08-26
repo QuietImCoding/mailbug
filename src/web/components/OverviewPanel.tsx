@@ -22,10 +22,13 @@ const CATEGORY_COLORS = [
   "#7d6b9a",
 ];
 
-function priorityColor(priority: number): string {
-  // Higher priority number = more urgent (red), per the dashboard's ramp.
-  if (priority >= 3) return PALETTE.high;
-  if (priority >= 2) return PALETTE.mid;
+function priorityColor(priority: number, priorities: number[]): string {
+  // Lower priority number = more important (red), matching the flipped ramp.
+  const min = Math.min(...priorities);
+  const max = Math.max(...priorities);
+  const norm = max === min ? 0.5 : (max - priority) / (max - min);
+  if (norm >= 0.66) return PALETTE.high;
+  if (norm >= 0.34) return PALETTE.mid;
   return PALETTE.low;
 }
 
@@ -80,6 +83,7 @@ function renderCategoryDonut(
 function renderPriorityBars(
   svgEl: SVGSVGElement,
   items: Array<{ priority: number; count: number }>,
+  priorities: number[],
 ): void {
   const width = 300;
   const height = 220;
@@ -115,7 +119,7 @@ function renderPriorityBars(
     .attr("y", (d) => y(d.count))
     .attr("width", x.bandwidth())
     .attr("height", (d) => height - margin.bottom - y(d.count))
-    .attr("fill", (d) => priorityColor(d.priority))
+    .attr("fill", (d) => priorityColor(d.priority, priorities))
     .attr("rx", 3);
 
   // Count labels.
@@ -157,7 +161,7 @@ export function OverviewPanel({ onClose }: { onClose: () => void }) {
   }, [stats]);
 
   useEffect(() => {
-    if (stats && priorityRef.current) renderPriorityBars(priorityRef.current, stats.byPriority);
+    if (stats && priorityRef.current) renderPriorityBars(priorityRef.current, stats.byPriority, stats.priorities);
   }, [stats]);
 
   return (

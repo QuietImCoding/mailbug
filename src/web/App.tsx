@@ -20,7 +20,7 @@ import { SettingsModal } from "./components/SettingsModal.tsx";
 import { Toast, useToast } from "./components/Toast.tsx";
 import { WidgetRail } from "./components/WidgetRail.tsx";
 
-const DEFAULT_PRIORITIES = [1, 2, 3];
+const DEFAULT_PRIORITIES = [1, 2, 3, 4, 5];
 
 /**
  * `#<email-id>` deep-links to an expanded message so a row can be shared.
