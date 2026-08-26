@@ -82,21 +82,46 @@ export async function classifyEmail(
   let parsed: unknown;
 
   if (process.env.DEEPSEEK_API_KEY) {
+    const baseURL = process.env.DEEPSEEK_BASE_URL ?? cfg.llm.baseURL;
+    const model = process.env.DEEPSEEK_MODEL ?? cfg.llm.model;
+    // Reasoning models count reasoning tokens against max_tokens, so give enough
+    // headroom for the reasoning pass *plus* the final JSON answer.
+    const maxTokens = Number(process.env.DEEPSEEK_MAX_TOKENS ?? cfg.llm.maxTokens);
     const client = new OpenAI({
       apiKey: process.env.DEEPSEEK_API_KEY,
-      baseURL: cfg.llm.baseURL,
+      baseURL,
     });
     const resp = await client.chat.completions.create({
-      model: cfg.llm.model,
-      max_tokens: cfg.llm.maxTokens,
+      model,
+      max_tokens: maxTokens,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: "You classify email. Respond with only a JSON object." },
         { role: "user", content: buildPrompt(email, cfg) },
       ],
     });
-    const content = resp.choices[0]?.message?.content ?? "";
-    parsed = JSON.parse(content);
+    // The final answer lives in `message.content`. `reasoning_content` (some
+    // DeepSeek/Qwen endpoints) holds the chain-of-thought and is NOT JSON —
+    // the model must still emit the JSON in `content`.
+    const raw = resp.choices[0]?.message?.content ?? "";
+    if (!raw) {
+      console.error("[classify] no content in LLM response", {
+        model,
+        email: email.messageId,
+        finishReason: resp.choices[0]?.finish_reason,
+        usage: resp.usage,
+        reasonPreview: (resp.choices[0]?.message as { reasoning_content?: string })
+          ?.reasoning_content
+          ?.slice(0, 200),
+      });
+      throw new Error(
+        `LLM returned no content for message ${email.messageId} (model=${model}). ` +
+          `finish_reason=${resp.choices[0]?.finish_reason}, usage=${JSON.stringify(resp.usage)}. ` +
+          `This is usually a max_tokens budget too small for a reasoning model — raise DEEPSEEK_MAX_TOKENS.`,
+      );
+    }
+    const cleaned = raw.replace(/^```(?:json)?\s*|\s*```$/g, "").trim();
+    parsed = JSON.parse(cleaned);
   } else {
     parsed = mockClassify(email, cfg);
   }
