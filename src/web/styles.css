@@ -76,17 +76,6 @@ body {
   flex: 0 0 auto;
 }
 
-.rail .slot-fill {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--paper);
-  font-size: clamp(20px, 2.4vw, 38px);
-  text-align: center;
-  opacity: 0.95;
-}
-
 /* Vertical rule between widgets, as in the mockup. */
 .rail .divider {
   width: var(--frame);
@@ -173,9 +162,11 @@ body {
 }
 
 .calendar .day.today {
-  outline: 3px solid var(--orange);
-  outline-offset: 2px;
+  background: var(--orange);
   opacity: 1;
+}
+.calendar .day.today .day-num {
+  color: var(--paper);
 }
 
 /* Day-events modal -------------------------------------------------------- */
@@ -753,9 +744,6 @@ select:focus-visible,
     gap: 20px;
   }
   .rail .divider {
-    display: none;
-  }
-  .rail .slot-fill {
     display: none;
   }
   .row-head .meta {

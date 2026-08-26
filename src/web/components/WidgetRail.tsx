@@ -167,7 +167,6 @@ export function WidgetRail({ widgets }: { widgets: Widgets | null }) {
       <CalendarWidget calendar={widgets?.calendar} events={widgets?.events ?? []} />
       <div className="divider" />
       <CodesWidget codes={widgets?.codes ?? []} />
-      <div className="slot-fill">widgets go here</div>
     </section>
   );
 }
