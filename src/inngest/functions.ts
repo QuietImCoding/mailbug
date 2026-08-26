@@ -1,8 +1,10 @@
 import { loadMailSpec } from "../config/mail-spec.ts";
 import { classifyEmail } from "../ingest/classifier.ts";
 import { getMailSource } from "../ingest/source.ts";
-import { dispatchActions, storeEmail } from "../ingest/store.ts";
+import { dispatchActions, recordActionStatus, storeEmail } from "../ingest/store.ts";
 import { inngest } from "./client.ts";
+import { executeAction, notify } from "./actions.ts";
+import type { ActionMap } from "../ingest/types.ts";
 
 const cfg = loadMailSpec();
 
@@ -29,5 +31,41 @@ export const ingestEmails = inngest.createFunction(
     }
 
     return { processed };
+  },
+);
+export const runAction = inngest.createFunction(
+  {
+    id: "run-action",
+    triggers: [{ event: "mailbug/action.run" }],
+  },
+  async ({ event, step }) => {
+    const { emailId, actionType, payload } = event.data as {
+      emailId: string;
+      actionType: string;
+      payload: ActionMap;
+    };
+
+    await step.run("mark-running", () => recordActionStatus(emailId, actionType, "running"));
+
+    if (actionType === "remind-me") {
+      const defaultDays = cfg.actions["remind-me"]?.defaultDays ?? 3;
+      const days = Number(payload.days ?? defaultDays);
+      const safeDays = Number.isFinite(days) && days >= 0 ? days : defaultDays;
+      await step.sleep("remind", safeDays * 86_400_000);
+      const output = await step.run("notify", () => notify("remind-me", payload));
+      await step.run("mark-done", () => recordActionStatus(emailId, actionType, "done"));
+      return { ...output, remindedAfterDays: safeDays };
+    }
+
+    try {
+      const output = await step.run(`execute:${actionType}`, () =>
+        executeAction(actionType, payload),
+      );
+      await step.run("mark-done", () => recordActionStatus(emailId, actionType, "done"));
+      return output;
+    } catch (err) {
+      await step.run("mark-failed", () => recordActionStatus(emailId, actionType, "failed"));
+      throw err;
+    }
   },
 );

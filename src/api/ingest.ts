@@ -1,0 +1,52 @@
+import { Router } from "express";
+import { loadMailSpec } from "../config/mail-spec.ts";
+import { classificationSchema } from "../ingest/classifier.ts";
+import { dispatchActions, storeEmail } from "../ingest/store.ts";
+import type { Classification, RawEmail } from "../ingest/types.ts";
+
+const cfg = loadMailSpec();
+const schema = classificationSchema(cfg);
+
+interface IngestBlob {
+  messageId: string;
+  subject: string;
+  fromAddress: string;
+  fromName?: string;
+  receivedAt: string;
+  bodyText?: string;
+  classification: Classification;
+}
+
+export const ingestRouter = Router();
+
+ingestRouter.post("/ingest", async (req, res) => {
+  const body = req.body;
+  const blobs: IngestBlob[] = Array.isArray(body) ? body : [body];
+
+  let stored = 0;
+  let skipped = 0;
+
+  for (const blob of blobs) {
+    try {
+      const classification = schema.parse({
+        ...blob.classification,
+        topic: blob.classification.topic || "uncategorized",
+      });
+      const email: RawEmail = {
+        messageId: blob.messageId,
+        subject: blob.subject,
+        fromAddress: blob.fromAddress,
+        fromName: blob.fromName ?? "",
+        receivedAt: blob.receivedAt,
+        bodyText: blob.bodyText ?? "",
+      };
+      const emailId = await storeEmail(email, classification);
+      await dispatchActions(emailId, classification.actions);
+      stored++;
+    } catch {
+      skipped++;
+    }
+  }
+
+  res.json({ stored, skipped });
+});
