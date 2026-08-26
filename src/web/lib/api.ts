@@ -108,6 +108,22 @@ export async function blockSender(address: string): Promise<void> {
   if (!res.ok) throw new Error(`could not block ${address}`);
 }
 
+interface BlockedSenders {
+  items: Array<{ address: string; blocked_at: string }>;
+}
+
+export async function fetchBlocked(): Promise<string[]> {
+  const data = await get<BlockedSenders>("/api/senders/blocked");
+  return data.items.map((item) => item.address.toLowerCase());
+}
+
+export async function unblockSender(address: string): Promise<void> {
+  const res = await fetch(`/api/senders/blocked/${encodeURIComponent(address)}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(`could not unblock ${address}`);
+}
+
 /**
  * Manually re-runs one of an email's actions. The server resets the stored
  * status to pending and dispatches a fresh Inngest run.

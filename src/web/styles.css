@@ -411,17 +411,16 @@ select:focus-visible,
   display: block;
   width: 19px;
   height: 19px;
-  background: var(--pri);
-  clip-path: polygon(
-    30% 0%,
-    70% 0%,
-    100% 30%,
-    100% 70%,
-    70% 100%,
-    30% 100%,
-    0% 70%,
-    0% 30%
-  );
+  overflow: visible;
+}
+.block-sender .stop polygon {
+  fill: transparent;
+  stroke: var(--pri);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.block-sender.blocked .stop polygon {
+  fill: var(--pri);
 }
 
 .block-sender:hover .stop,

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   blockSender,
+  fetchBlocked,
   fetchEmail,
   fetchEmails,
   fetchStatistics,
   fetchWidgets,
   triggerAction,
+  unblockSender,
   type EmailDetail,
   type EmailList,
   type Statistics,
@@ -60,6 +62,7 @@ export function App() {
   const [widgets, setWidgets] = useState<Widgets | null>(null);
   const [details, setDetails] = useState<Record<string, EmailDetail>>({});
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState<Set<string>>(() => new Set());
 
   const [openId, setOpenId] = useHashId();
   const { toast, show } = useToast();
@@ -68,12 +71,13 @@ export function App() {
     let cancelled = false;
     setError(null);
 
-    Promise.all([fetchStatistics(), fetchEmails(query), fetchWidgets()])
-      .then(([nextStats, nextList, nextWidgets]) => {
+    Promise.all([fetchStatistics(), fetchEmails(query), fetchWidgets(), fetchBlocked()])
+      .then(([nextStats, nextList, nextWidgets, nextBlocked]) => {
         if (cancelled) return;
         setStats(nextStats);
         setList(nextList);
         setWidgets(nextWidgets);
+      setBlocked(new Set(nextBlocked));
       })
       .catch((err: unknown) => {
         if (!cancelled)
@@ -111,25 +115,44 @@ export function App() {
 
   const handleBlock = useCallback(
     async (address: string) => {
-      if (
-        !window.confirm(
-          `Block ${address}? Their mail will be hidden from the inbox.`,
-        )
-      ) {
-        return;
+      const key = address.toLowerCase();
+
+      if (blocked.has(key)) {
+        try {
+          await unblockSender(address);
+        } catch {
+          show("couldn't unblock that sender");
+          return;
+        }
+        setBlocked((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+        show(`unblocked ${address}`);
+      } else {
+        if (
+          !window.confirm(
+            `Block ${address}? Their mail will be hidden from the inbox.`,
+          )
+        ) {
+          return;
+        }
+        try {
+          await blockSender(address);
+        } catch {
+          show("couldn't block that sender");
+          return;
+        }
+        setBlocked((prev) => new Set(prev).add(key));
+        show(`blocked ${address}`);
       }
-      try {
-        await blockSender(address);
-      } catch {
-        show("couldn't block that sender");
-        return;
-      }
+
       setDetails({});
       setOpenId(null);
       setReloadKey((key) => key + 1);
-      show(`blocked ${address}`);
     },
-    [setOpenId, show],
+    [blocked, setOpenId, show],
   );
 
   const handleTrigger = useCallback(
@@ -188,6 +211,7 @@ export function App() {
                 detail={details[email.id]}
                 open={openId === email.id}
                 priorities={priorities}
+                blocked={blocked.has(email.from_address.toLowerCase())}
                 onToggle={setOpenId}
                 onBlock={(address) => void handleBlock(address)}
                 onToast={show}

@@ -76,23 +76,27 @@ function ActionChip({
 
 function BlockSender({
   address,
+  blocked,
   onBlock,
 }: {
   address: string;
+  blocked: boolean;
   onBlock: () => void;
 }) {
   return (
     <button
       type="button"
-      className="block-sender"
-      data-tip="click to block this sender"
-      aria-label={`Block ${address}`}
+      className={blocked ? "block-sender blocked" : "block-sender"}
+      data-tip={blocked ? "click to unblock this sender" : "click to block this sender"}
+      aria-label={blocked ? `Unblock ${address}` : `Block ${address}`}
       onClick={(event) => {
         event.stopPropagation();
         onBlock();
       }}
     >
-      <span className="stop" />
+      <svg className="stop" viewBox="0 0 24 24" aria-hidden="true">
+        <polygon points="12,1.8 20.6,5.6 22.8,12 20.6,18.4 12,22.2 3.4,18.4 1.2,12 3.4,5.6" />
+      </svg>
     </button>
   );
 }
@@ -102,6 +106,7 @@ interface Props {
   detail: EmailDetail | undefined;
   open: boolean;
   priorities: number[];
+  blocked: boolean;
   onToggle: (id: string | null) => void;
   onBlock: (address: string) => void;
   onToast: (message: string) => void;
@@ -113,6 +118,7 @@ export function EmailRow({
   detail,
   open,
   priorities,
+  blocked,
   onToggle,
   onBlock,
   onToast,
@@ -154,14 +160,10 @@ export function EmailRow({
                   <span>from: {email.from_address}</span>
                   <BlockSender
                     address={email.from_address}
+                    blocked={blocked}
                     onBlock={() => onBlock(email.from_address)}
                   />
                 </div>
-                {detail?.to_address ? (
-                  <div className="line">
-                    <span>to: {detail.to_address}</span>
-                  </div>
-                ) : null}
               </div>
             </div>
             <div className="priority-badge">pri: {email.priority}</div>
