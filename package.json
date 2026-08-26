@@ -5,15 +5,34 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "INNGEST_DEV=1 tsx src/server.ts",
+    "db:reset": "tsx src/db/reset.ts",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  },
   "dependencies": {
     "@types/express": "^5.0.6",
+    "better-sqlite3": "^13.0.3",
     "express": "^5.2.1",
+    "imapflow": "^1.7.6",
     "inngest": "^4.18.1",
-    "prettier": "^3.9.6"
+    "kysely": "^0.29.5",
+    "openai": "^7.5.0",
+    "prettier": "^3.9.6",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.3.0",
+    "tsx": "^4.23.12"
   }
 }
