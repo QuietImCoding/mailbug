@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { serve } from "inngest/express";
+import { actionsRouter } from "./api/actions.ts";
 import { ingestRouter } from "./api/ingest.ts";
 import { sendersRouter } from "./api/senders.ts";
 import { statisticsRouter } from "./api/statistics.ts";
@@ -17,6 +18,7 @@ app.use(express.json({ limit: process.env.BODY_LIMIT ?? "10mb" }));
 app.use("/api/inngest", serve({ client: inngest, functions: [ingestEmails, runAction] }));
 app.use("/api", statisticsRouter);
 app.use("/api", ingestRouter);
+app.use("/api", actionsRouter);
 app.use("/api", sendersRouter);
 app.use("/api", widgetsRouter);
 app.use(express.static(new URL("./public", import.meta.url).pathname));

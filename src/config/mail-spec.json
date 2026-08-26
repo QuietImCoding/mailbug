@@ -2,7 +2,18 @@
   "categories": ["marketing", "finance", "updates", "social", "work", "personal"],
   "priorities": [1, 2, 3],
   "actions": {
-    "ntfy": { "topic": "mailbug" },
+    "ntfy": {
+      "baseUrl": "https://ntfy.sh",
+      "defaultTopic": "mailbug",
+      "topics": {
+        "marketing": "mailbug-marketing",
+        "finance": "mailbug-finance",
+        "updates": "mailbug-updates",
+        "social": "mailbug-social",
+        "work": "mailbug-work",
+        "personal": "mailbug-personal"
+      }
+    },
     "add-to-calendar": { "calendar": "personal" },
     "remind-me": { "defaultDays": 3 },
     "webhook": { "url": "" }

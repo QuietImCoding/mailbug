@@ -232,11 +232,29 @@ function buildActionChip(email, action, expanded) {
     if (isCalendar) {
       downloadInvite(email, message || email.subject, when);
     } else {
-      toast(`${label} — ${action.status}`);
+      void triggerAction(email, action, label);
     }
   });
 
   return chip;
+}
+async function triggerAction(email, action, label) {
+  try {
+    const res = await fetch(`/api/emails/${email.id}/actions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ actionType: action.action_type }),
+    });
+    if (!res.ok) {
+      toast(`couldn't trigger ${label}`);
+      return;
+    }
+    toast(`${label} triggered`);
+    // Refresh so the chip's status reflects the new run.
+    await load();
+  } catch {
+    toast("couldn't reach service");
+  }
 }
 
 function buildCollapsed(email) {

@@ -6,7 +6,15 @@ export interface MailSpec {
   priorities: number[];
   actions: Record<
     string,
-    { topic?: string; calendar?: string; defaultDays?: number; url?: string }
+    {
+      topic?: string;
+      calendar?: string;
+      defaultDays?: number;
+      url?: string;
+      baseUrl?: string;
+      defaultTopic?: string;
+      topics?: Record<string, string>;
+    }
   >;
   llm: { baseURL: string; model: string; maxTokens: number };
   ingestion: { cron: string };

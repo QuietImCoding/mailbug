@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import express from "express";
 import * as nodeTest from "node:test";
+import { actionsRouter } from "../src/api/actions.ts";
 import { ingestRouter } from "../src/api/ingest.ts";
 import { sendersRouter } from "../src/api/senders.ts";
 import { statisticsRouter } from "../src/api/statistics.ts";
@@ -31,6 +32,7 @@ before(async () => {
   app.use("/api", ingestRouter);
   app.use("/api", sendersRouter);
   app.use("/api", widgetsRouter);
+  app.use("/api", actionsRouter);
   await new Promise<void>((resolve) => {
     server = app.listen(0, () => resolve());
   });
@@ -318,4 +320,22 @@ test("extractPlainText falls back to html and leaves plain text alone", () => {
     extractPlainText("already clean\n\nbody"),
     "already clean\n\nbody",
   );
+});
+test("POST /api/emails/:id/actions validates actionType and email", async () => {
+  const { items } = await list("?category=marketing");
+  const id = items[0].id;
+
+  const unknown = await fetch(`${base}/api/emails/${id}/actions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ actionType: "nope" }),
+  });
+  assert.equal(unknown.status, 400);
+
+  const missing = await fetch(`${base}/api/emails/does-not-exist/actions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ actionType: "ntfy" }),
+  });
+  assert.equal(missing.status, 404);
 });
