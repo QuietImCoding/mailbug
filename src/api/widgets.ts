@@ -46,9 +46,16 @@ const CODE_PATTERNS = [
   /\b([0-9]{4,8})\b[^.\n]{0,30}?\bis your\b/i,
 ];
 
-/** Pulls a one-time code out of an email body, or null if there isn't one. */
+/**
+ * Pulls a one-time code out of an email body, or null if there isn't one.
+ *
+ * The whole text is searched (not just a leading window): 2FA codes commonly
+ * appear in the plain-text part that follows a long MIME/header preamble, so a
+ * fixed early slice would miss them.
+ */
 export function extractCode(text: string): string | null {
-  const haystack = text.slice(0, 4000);
+  // Guard against pathological body sizes; every real code sits well below this.
+  const haystack = text.slice(0, 64_000);
   for (const re of CODE_PATTERNS) {
     const m = haystack.match(re);
     // Reject all-letter matches from the alphanumeric branch — those are words.

@@ -20,7 +20,8 @@ export interface MailSpec {
   >;
   llm: { baseURL: string; model: string; maxTokens: number };
   prompt: { instructions: string; responseShape: string };
-  ingestion: { cron: string };
+  /** `idle` opts out of the IMAP IDLE watcher; the cron poll always runs. */
+  ingestion: { cron: string; idle?: boolean };
 }
 
 let instance: MailSpec | undefined;

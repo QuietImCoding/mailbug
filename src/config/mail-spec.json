@@ -40,6 +40,7 @@
     "responseShape": "{\"category\":\"<one of the categories>\",\"priority\":<one of the priorities>,\"topic\":\"<short label>\",\"actions\":[{\"<actionType>\":\"<short message>\"}]}"
   },
   "ingestion": {
-    "cron": "*/5 * * * *"
+    "cron": "*/5 * * * *",
+    "idle": true
   }
 }
