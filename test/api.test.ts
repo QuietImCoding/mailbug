@@ -124,7 +124,7 @@ test("POST /api/ingest defaults a missing topic", async () => {
     classification: {
       category: "finance",
       priority: 2,
-      actions: [{ webhook: "invoice paid" }],
+      actions: [{ "page-user": "invoice paid" }],
     },
   });
   assert.deepEqual(await postIngest(noTopic), { stored: 1, skipped: 0 });

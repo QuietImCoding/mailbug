@@ -27,7 +27,7 @@
     },
     {
       "key": "personal",
-      "prompt": "Personal correspondence from family or friends, and the fallback for mail that does not clearly fit another category.",
+      "prompt": "Personal correspondence from family and friends, and the fallback for mail that does not clearly fit another category.",
       "priority": 3
     }
   ],
@@ -50,9 +50,7 @@
       },
       "defaultLevel": "critical"
     },
-    "add-to-calendar": { "calendar": "personal" },
-    "remind-me": { "defaultDays": 3 },
-    "webhook": { "url": "" }
+    "add-to-calendar": { "calendar": "personal" }
   },
   "llm": {
     "baseURL": "https://api.deepseek.com",
@@ -64,7 +62,6 @@
     "responseShape": "{\"category\":\"<one of the category keys>\",\"priority\":<the category's listed priority or an override>,\"topic\":\"<short label>\",\"actions\":[{\"<actionType>\":\"<short message>\"}]}"
   },
   "ingestion": {
-    "cron": "*/5 * * * *",
-    "idle": true
+    "cron": "*/5 * * * *"
   }
 }

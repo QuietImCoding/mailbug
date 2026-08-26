@@ -101,19 +101,3 @@ export async function executeCalendar(
   const url = payload.url || process.env.MAILBUG_WEBHOOK_URL;
   return postJsonOrSimulate(url, "add-to-calendar", payload);
 }
-
-export async function executeWebhook(
-  payload: ActionMap,
-  ctx: ActionContext,
-): Promise<ActionOutput> {
-  const url = payload.url || process.env.MAILBUG_WEBHOOK_URL;
-  return postJsonOrSimulate(url, "webhook", payload);
-}
-
-// Used by the remind-me function after sleeping. Pages the user like page-user.
-export async function notify(
-  payload: ActionMap,
-  ctx: ActionContext,
-): Promise<ActionOutput> {
-  return publishPageUser(loadMailSpec(), ctx, payload);
-}

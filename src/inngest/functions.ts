@@ -7,8 +7,6 @@ import type { ActionMap } from "../ingest/types.ts";
 import {
   executeCalendar,
   executePageUser,
-  executeWebhook,
-  notify,
   type ActionContext,
   type ActionOutput,
 } from "./actions.ts";
@@ -133,52 +131,7 @@ export const runCalendarAction = inngest.createFunction(
   },
 );
 
-export const runWebhookAction = inngest.createFunction(
-  { id: "run-action-webhook", triggers: [{ event: "mailbug/action.webhook" }] },
-  async ({ event, step }) => {
-    const { emailId, payload } = event.data as ActionEvent;
-    const ctx = await loadEmailCtx(emailId);
-    logActionCall("webhook", emailId, payload, ctx);
-
-    await step.run("mark-running", () => recordActionStatus(emailId, "webhook", "running"));
-    try {
-      const output = await step.run("execute", () => executeWebhook(payload, ctx));
-      await step.run("mark-done", () => recordActionStatus(emailId, "webhook", "done"));
-      return output;
-    } catch (err) {
-      await step.run("mark-failed", () => recordActionStatus(emailId, "webhook", "failed"));
-      throw err;
-    }
-  },
-);
-
-export const runRemindMeAction = inngest.createFunction(
-  { id: "run-action-remind-me", triggers: [{ event: "mailbug/action.remind-me" }] },
-  async ({ event, step }) => {
-    const { emailId, payload } = event.data as ActionEvent;
-    const ctx = await loadEmailCtx(emailId);
-    logActionCall("remind-me", emailId, payload, ctx);
-
-    await step.run("mark-running", () => recordActionStatus(emailId, "remind-me", "running"));
-    try {
-      const cfg = loadMailSpec();
-      const defaultDays = cfg.actions["remind-me"]?.defaultDays ?? 3;
-      const days = Number(payload.days ?? defaultDays);
-      const safeDays = Number.isFinite(days) && days >= 0 ? days : defaultDays;
-      await step.sleep("remind", safeDays * 86_400_000);
-      const output = await step.run("notify", () => notify(payload, ctx));
-      await step.run("mark-done", () => recordActionStatus(emailId, "remind-me", "done"));
-      return { ...output, remindedAfterDays: safeDays };
-    } catch (err) {
-      await step.run("mark-failed", () => recordActionStatus(emailId, "remind-me", "failed"));
-      throw err;
-    }
-  },
-);
-
 export const actionFunctions = [
   runPageUserAction,
   runCalendarAction,
-  runWebhookAction,
-  runRemindMeAction,
 ];

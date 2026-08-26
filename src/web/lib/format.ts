@@ -53,8 +53,6 @@ export function actionMessage(action: EmailAction): string {
 export const ACTION_LABELS: Record<string, string> = {
   "add-to-calendar": "add to cal",
   "page-user": "page user",
-  "remind-me": "remind me",
-  webhook: "webhook",
 };
 
 export const actionLabel = (type: string) => ACTION_LABELS[type] ?? type;
