@@ -9,7 +9,7 @@ import { statisticsRouter } from "./api/statistics.ts";
 import { widgetsRouter } from "./api/widgets.ts";
 import { initDb } from "./db/db.ts";
 import { inngest } from "./inngest/client.ts";
-import { ingestEmails, runAction } from "./inngest/functions.ts";
+import { actionFunctions, ingestEmails } from "./inngest/functions.ts";
 
 await initDb();
 
@@ -18,7 +18,7 @@ app.use(express.json({ limit: process.env.BODY_LIMIT ?? "10mb" }));
 
 app.use(
   "/api/inngest",
-  serve({ client: inngest, functions: [ingestEmails, runAction] }),
+  serve({ client: inngest, functions: [ingestEmails, ...actionFunctions] }),
 );
 app.use("/api", statisticsRouter);
 app.use("/api", ingestRouter);

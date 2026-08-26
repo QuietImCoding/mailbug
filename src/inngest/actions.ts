@@ -51,7 +51,7 @@ async function postJsonOrSimulate(
     });
     return { delivered: true, simulated: false };
   }
-  console.log(`[action:${actionType}] ${message}`);
+  console.log(`[${actionType}] simulated`);
   return { delivered: false, simulated: true };
 }
 
@@ -79,34 +79,37 @@ async function publishNtfy(
     console.log(`[ntfy] published to ${url}`);
     return { delivered: true, simulated: false };
   }
-  console.log(`[action:ntfy] ${message}`);
+  console.log(`[ntfy] ${message}`);
   return { delivered: false, simulated: true };
 }
 
-export async function executeAction(
-  actionType: string,
+export async function executeNtfy(
   payload: ActionMap,
-  ctx: ActionContext = {},
+  ctx: ActionContext,
 ): Promise<ActionOutput> {
-  const cfg = loadMailSpec();
-  switch (actionType) {
-    case "ntfy":
-      return publishNtfy(cfg, ctx, payload);
-    case "add-to-calendar":
-    case "webhook": {
-      const url = payload.url || process.env.MAILBUG_WEBHOOK_URL;
-      return postJsonOrSimulate(url, actionType, payload);
-    }
-    default:
-      throw new Error(`unsupported action type: ${actionType}`);
-  }
+  return publishNtfy(loadMailSpec(), ctx, payload);
 }
 
-// Used by the remind-me branch after sleeping. Notifies the same way as ntfy.
-export async function notify(
-  actionType: string,
+export async function executeCalendar(
   payload: ActionMap,
-  ctx: ActionContext = {},
+  ctx: ActionContext,
+): Promise<ActionOutput> {
+  const url = payload.url || process.env.MAILBUG_WEBHOOK_URL;
+  return postJsonOrSimulate(url, "add-to-calendar", payload);
+}
+
+export async function executeWebhook(
+  payload: ActionMap,
+  ctx: ActionContext,
+): Promise<ActionOutput> {
+  const url = payload.url || process.env.MAILBUG_WEBHOOK_URL;
+  return postJsonOrSimulate(url, "webhook", payload);
+}
+
+// Used by the remind-me function after sleeping. Notifies like ntfy.
+export async function notify(
+  payload: ActionMap,
+  ctx: ActionContext,
 ): Promise<ActionOutput> {
   return publishNtfy(loadMailSpec(), ctx, payload);
 }

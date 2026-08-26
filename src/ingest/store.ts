@@ -74,8 +74,8 @@ export async function dispatchActions(
   for (const entry of actions) {
     const [actionType] = Object.entries(entry)[0];
     await inngest.send({
-      name: "mailbug/action.run",
-      data: { emailId, actionType, payload: entry },
+      name: `mailbug/action.${actionType}`,
+      data: { emailId, payload: entry },
       id: `${emailId}:${actionType}`,
     });
   }
