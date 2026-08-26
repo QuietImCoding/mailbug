@@ -2,7 +2,7 @@ import { loadMailSpec } from "../config/mail-spec.ts";
 import { db } from "../db/db.ts";
 import { classifyEmail } from "../ingest/classifier.ts";
 import { getMailSource } from "../ingest/source.ts";
-import { dispatchActions, recordActionStatus, refreshEmailContent, storeEmail } from "../ingest/store.ts";
+import { dispatchActions, getLastIngestedAt, recordActionStatus, refreshEmailContent, setLastIngestedAt, storeEmail } from "../ingest/store.ts";
 import type { ActionMap } from "../ingest/types.ts";
 import {
   executeCalendar,
@@ -23,9 +23,14 @@ export const ingestEmails = inngest.createFunction(
   },
   async ({ step }) => {
     const cfg = loadMailSpec();
-    const since = new Date(Date.now() - 24 * 3600 * 1000);
+    const lastIngestedAt = await step.run("read-last-ingested", () => getLastIngestedAt());
+    const since = lastIngestedAt
+      ? new Date(lastIngestedAt)
+      : new Date(Date.now() - 24 * 3600 * 1000);
     const emails = await step.run("fetch-emails", () => getMailSource().fetchSince(since));
+
     let processed = 0;
+    let latest: Date | null = null;
 
     for (const email of emails) {
       // Use the messageId in each step ID so parallel per-email chains don't collide.
@@ -41,9 +46,18 @@ export const ingestEmails = inngest.createFunction(
         console.error("skipped email", email.messageId, err);
         await step.run(`refresh-body:${id}`, () => refreshEmailContent(email));
       }
+      const received = new Date(email.receivedAt);
+      if (!Number.isNaN(received.getTime()) && (!latest || received > latest)) {
+        latest = received;
+      }
     }
 
-    return { processed };
+    // Archive the batch: advance the cursor so the next run only fetches newer
+    // mail, instead of re-fetching every message each time.
+    const cursor = latest ?? new Date();
+    await step.run("save-last-ingested", () => setLastIngestedAt(cursor.toISOString()));
+
+    return { processed, since: since.toISOString(), until: cursor.toISOString() };
   },
 );
 

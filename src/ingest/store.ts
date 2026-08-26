@@ -69,6 +69,7 @@ export async function storeEmail(
 
   return id;
 }
+
 // Refreshes only the content (subject/from/to/date/body) for an email that
 // already exists, without touching its classification or stored actions. Used
 // when a re-ingest fetched fresh content but classification failed.
@@ -104,6 +105,23 @@ export async function recordActionStatus(
     .set({ status })
     .where("email_id", "=", emailId)
     .where("action_type", "=", actionType)
+    .execute();
+}
+
+export async function getLastIngestedAt(): Promise<string | null> {
+  const row = await db
+    .selectFrom("ingest_state")
+    .select("last_ingested_at")
+    .where("id", "=", 1)
+    .executeTakeFirst();
+  return row?.last_ingested_at ?? null;
+}
+
+export async function setLastIngestedAt(iso: string): Promise<void> {
+  await db
+    .insertInto("ingest_state")
+    .values({ id: 1, last_ingested_at: iso })
+    .onConflict((oc) => oc.column("id").doUpdateSet({ last_ingested_at: iso }))
     .execute();
 }
 

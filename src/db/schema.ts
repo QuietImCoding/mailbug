@@ -28,8 +28,15 @@ export interface BlockedSenderRow {
   blocked_at: string;
 }
 
+// Single-row table tracking where the incremental ingestion cursor sits.
+export interface IngestStateRow {
+  id: number;
+  last_ingested_at: string;
+}
+
 export interface DB {
   emails: EmailRow;
   email_actions: EmailActionRow;
   blocked_senders: BlockedSenderRow;
+  ingest_state: IngestStateRow;
 }

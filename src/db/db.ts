@@ -53,6 +53,13 @@ export async function initDb(): Promise<void> {
     .addColumn("blocked_at", "text", (col) => col.notNull().defaultTo(""))
     .execute();
 
+  await db.schema
+    .createTable("ingest_state")
+    .ifNotExists()
+    .addColumn("id", "integer", (col) => col.notNull().primaryKey())
+    .addColumn("last_ingested_at", "text", (col) => col.notNull())
+    .execute();
+
   // `createTable(...).ifNotExists()` is a no-op on an existing database, so
   // columns added after the first release need their own idempotent ALTER.
   await addColumnIfMissing("emails", "to_address");
