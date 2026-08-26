@@ -57,6 +57,15 @@ export class ImapMailSource implements MailSource {
       auth: { user, pass },
       logger: false,
     });
+    // ImapFlow emits an `error` event on socket resets; without a listener an
+    // unhandled `'error'` event crashes the whole process. Connect/fetch
+    // failures still reject the returned promise so callers observe them.
+    client.on("error", (err) => {
+      console.error(
+        `[imap] ${host}: connection error`,
+        err instanceof Error ? err.message : err,
+      );
+    });
     const results: RawEmail[] = [];
     let connected = false;
 
