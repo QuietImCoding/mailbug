@@ -19,14 +19,25 @@ export interface MailSpec {
     }
   >;
   llm: { baseURL: string; model: string; maxTokens: number };
+  prompt: { instructions: string; responseShape: string };
   ingestion: { cron: string };
 }
 
 let instance: MailSpec | undefined;
 
+export function mailSpecPath(): string {
+  return fileURLToPath(new URL("./mail-spec.json", import.meta.url));
+}
+
 export function loadMailSpec(): MailSpec {
   if (instance) return instance;
-  const path = fileURLToPath(new URL("./mail-spec.json", import.meta.url));
-  instance = JSON.parse(readFileSync(path, "utf8")) as MailSpec;
+  instance = JSON.parse(readFileSync(mailSpecPath(), "utf8")) as MailSpec;
   return instance;
+}
+
+// Re-reads the file and invalidates the cached instance so a UI edit takes
+// effect on the next use (e.g. the next ingest classification).
+export function reloadMailSpec(): MailSpec {
+  instance = undefined;
+  return loadMailSpec();
 }

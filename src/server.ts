@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { serve } from "inngest/express";
 import { actionsRouter } from "./api/actions.ts";
+import { configRouter } from "./api/config.ts";
 import { ingestRouter } from "./api/ingest.ts";
 import { sendersRouter } from "./api/senders.ts";
 import { statisticsRouter } from "./api/statistics.ts";
@@ -23,6 +24,7 @@ app.use(
 app.use("/api", statisticsRouter);
 app.use("/api", ingestRouter);
 app.use("/api", actionsRouter);
+app.use("/api", configRouter);
 app.use("/api", sendersRouter);
 app.use("/api", widgetsRouter);
 // In production the client is the Vite build; in dev `pnpm dev` runs the Vite

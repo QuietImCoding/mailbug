@@ -21,9 +21,17 @@ export function classificationSchema(cfg: MailSpec): z.ZodType<Classification> {
   });
 }
 
+const DEFAULT_INSTRUCTIONS =
+  "Classify this email. Return ONLY a JSON object matching the response shape. Category must be one of the listed categories, priority one of the listed priorities, topic a short label, and each action key one of the available actions.";
+const DEFAULT_RESPONSE_SHAPE =
+  '{"category":"<one of the categories>","priority":<one of the priorities>,"topic":"<short label>","actions":[{"<actionType>":"<short message>"}]}';
+
 function buildPrompt(email: RawEmail, cfg: MailSpec): string {
+  const instructions = cfg.prompt?.instructions.trim() || DEFAULT_INSTRUCTIONS;
+  const responseShape = cfg.prompt?.responseShape.trim() || DEFAULT_RESPONSE_SHAPE;
   return [
-    "Classify this email.",
+    instructions,
+    "",
     `Categories: ${cfg.categories.join(", ")}`,
     `Priorities: ${cfg.priorities.join(", ")}`,
     `Available actions: ${Object.keys(cfg.actions).join(", ")}`,
@@ -32,8 +40,8 @@ function buildPrompt(email: RawEmail, cfg: MailSpec): string {
     `Received: ${email.receivedAt}`,
     `Body:\n${email.bodyText}`,
     "",
-    'Return ONLY a JSON object with this exact shape:',
-    '{"category":"<one of the categories>","priority":<one of the priorities>,"topic":"<short label>","actions":[{"<actionType>":"<short message>"}]}',
+    "Return ONLY a JSON object with this exact shape:",
+    responseShape,
     "where actionType is one of the available actions and message is a short string.",
   ].join("\n");
 }

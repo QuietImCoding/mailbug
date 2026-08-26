@@ -23,6 +23,7 @@ export const ingestEmails = inngest.createFunction(
     triggers: [{ cron: cfg.ingestion.cron }, { event: "mailbug/ingest.run" }],
   },
   async ({ step }) => {
+    const cfg = loadMailSpec();
     const since = new Date(Date.now() - 24 * 3600 * 1000);
     const emails = await step.run("fetch-emails", () => getMailSource().fetchSince(since));
     let processed = 0;
@@ -164,6 +165,7 @@ export const runRemindMeAction = inngest.createFunction(
 
     await step.run("mark-running", () => recordActionStatus(emailId, "remind-me", "running"));
     try {
+      const cfg = loadMailSpec();
       const defaultDays = cfg.actions["remind-me"]?.defaultDays ?? 3;
       const days = Number(payload.days ?? defaultDays);
       const safeDays = Number.isFinite(days) && days >= 0 ? days : defaultDays;

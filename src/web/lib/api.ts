@@ -139,3 +139,26 @@ export async function triggerAction(
   });
   if (!res.ok) throw new Error(`could not trigger ${actionType}`);
 }
+export interface MailConfig {
+  categories: string[];
+  priorities: number[];
+  prompt: { instructions: string; responseShape: string };
+}
+
+export const fetchConfig = () => get<MailConfig>("/api/config");
+
+export async function saveConfig(
+  config: {
+    categories: string[];
+    priorities: number[];
+    prompt: MailConfig["prompt"];
+  },
+): Promise<MailConfig> {
+  const res = await fetch("/api/config", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(config),
+  });
+  if (!res.ok) throw new Error("could not save config");
+  return (await res.json()) as MailConfig;
+}

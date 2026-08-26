@@ -15,6 +15,7 @@ import {
 } from "./lib/api.ts";
 import { EmailRow } from "./components/EmailRow.tsx";
 import { InboxControls, type InboxQuery } from "./components/InboxControls.tsx";
+import { SettingsModal } from "./components/SettingsModal.tsx";
 import { Toast, useToast } from "./components/Toast.tsx";
 import { WidgetRail } from "./components/WidgetRail.tsx";
 
@@ -63,6 +64,7 @@ export function App() {
   const [details, setDetails] = useState<Record<string, EmailDetail>>({});
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<Set<string>>(() => new Set());
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const [openId, setOpenId] = useHashId();
   const { toast, show } = useToast();
@@ -183,6 +185,14 @@ export function App() {
       <header className="wordmark">
         <img src="/assets/mailbug.png" alt="" />
         <h1>Mailbug</h1>
+        <button
+          type="button"
+          className="settings-button"
+          aria-label="Settings"
+          onClick={() => setSettingsOpen(true)}
+        >
+          ⚙
+        </button>
       </header>
 
       <WidgetRail widgets={widgets} />
@@ -223,6 +233,10 @@ export function App() {
           )}
         </div>
       </section>
+
+      {settingsOpen ? (
+        <SettingsModal onClose={() => setSettingsOpen(false)} onSaved={show} />
+      ) : null}
 
       <Toast toast={toast} />
     </>

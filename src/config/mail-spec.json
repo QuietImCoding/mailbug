@@ -1,6 +1,17 @@
 {
-  "categories": ["marketing", "finance", "updates", "social", "work", "personal"],
-  "priorities": [1, 2, 3],
+  "categories": [
+    "marketing",
+    "finance",
+    "updates",
+    "social",
+    "work",
+    "personal"
+  ],
+  "priorities": [
+    1,
+    2,
+    3
+  ],
   "actions": {
     "ntfy": {
       "baseUrl": "https://ntfy.sh",
@@ -23,6 +34,16 @@
     "webhook": { "url": "" },
     "page-user": { "defaultLevel": "critical" }
   },
-  "llm": { "baseURL": "https://api.deepseek.com", "model": "deepseek-chat", "maxTokens": 2048 },
-  "ingestion": { "cron": "*/5 * * * *" }
+  "llm": {
+    "baseURL": "https://api.deepseek.com",
+    "model": "deepseek-chat",
+    "maxTokens": 2048
+  },
+  "prompt": {
+    "instructions": "Classify this email. Return ONLY a JSON object matching the response shape. Category must be one of the listed categories, priority one of the listed priorities, topic a short label, and each action key one of the available actions.",
+    "responseShape": "{\"category\":\"<one of the categories>\",\"priority\":<one of the priorities>,\"topic\":\"<short label>\",\"actions\":[{\"<actionType>\":\"<short message>\"}]}"
+  },
+  "ingestion": {
+    "cron": "*/5 * * * *"
+  }
 }
