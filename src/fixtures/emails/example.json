@@ -1,0 +1,8 @@
+{
+  "messageId": "fixture-001",
+  "subject": "Your weekly digest",
+  "fromAddress": "news@example.com",
+  "fromName": "Example News",
+  "receivedAt": "2026-08-26T08:00:00.000Z",
+  "bodyText": "Here is your weekly digest of product updates and announcements."
+}
