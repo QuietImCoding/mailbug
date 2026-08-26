@@ -1,0 +1,48 @@
+import Database from "better-sqlite3";
+import { Kysely, SqliteDialect } from "kysely";
+import type { DB } from "./schema.ts";
+
+// Opens `mailbug.db` lazily on the first query so that `db:reset` can unlink
+// the file before any connection is established. Kysely calls the factory
+// once and reuses the connection for the lifetime of the instance.
+export const db = new Kysely<DB>({
+  dialect: new SqliteDialect({
+    database: () => Promise.resolve(new Database("mailbug.db")),
+  }),
+});
+
+export async function initDb(): Promise<void> {
+  await db.schema
+    .createTable("emails")
+    .ifNotExists()
+    .addColumn("id", "text", (col) => col.notNull().primaryKey())
+    .addColumn("message_id", "text", (col) => col.notNull().unique())
+    .addColumn("subject", "text", (col) => col.notNull())
+    .addColumn("from_address", "text", (col) => col.notNull())
+    .addColumn("from_name", "text", (col) => col.notNull().defaultTo(""))
+    .addColumn("received_at", "text", (col) => col.notNull())
+    .addColumn("category", "text", (col) => col.notNull())
+    .addColumn("priority", "integer", (col) => col.notNull())
+    .addColumn("topic", "text", (col) => col.notNull())
+    .addColumn("body_text", "text", (col) => col.notNull())
+    .addColumn("raw_json", "text", (col) => col.notNull())
+    .addColumn("created_at", "text", (col) => col.notNull().defaultTo(""))
+    .execute();
+
+  await db.schema
+    .createTable("email_actions")
+    .ifNotExists()
+    .addColumn("id", "text", (col) => col.notNull().primaryKey())
+    .addColumn("email_id", "text", (col) =>
+      col.notNull().references("emails.id").onDelete("cascade"),
+    )
+    .addColumn("action_type", "text", (col) => col.notNull())
+    .addColumn("payload", "text", (col) => col.notNull())
+    .addColumn("status", "text", (col) => col.notNull().defaultTo("pending"))
+    .addColumn("created_at", "text", (col) => col.notNull().defaultTo(""))
+    .execute();
+
+  await db.schema.createIndex("emails_category").on("emails").column("category").execute();
+  await db.schema.createIndex("emails_sender").on("emails").column("from_address").execute();
+  await db.schema.createIndex("emails_topic").on("emails").column("topic").execute();
+}
