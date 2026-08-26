@@ -3,34 +3,37 @@ import { loadMailSpec } from "../config/mail-spec.ts";
 import { db } from "../db/db.ts";
 import type { DB } from "../db/schema.ts";
 import { addressOf, extractPlainText, parseMessage } from "../ingest/mime.ts";
+import { dismissEmail } from "../ingest/store.ts";
 
 export const statisticsRouter = Router();
 
+// Dismissed emails are hidden from the inbox/statistics without being deleted.
+function activeEmails() {
+  return db.selectFrom("emails").where("dismissed_at", "=", "");
+}
+
 statisticsRouter.get("/statistics", async (_req, res) => {
-  const totalRow = await db
-    .selectFrom("emails")
+  const active = activeEmails();
+  const totalRow = await active
     .select(db.fn.countAll().as("count"))
     .executeTakeFirst();
   const total = Number(totalRow?.count ?? 0);
 
-  const byCategory = await db
-    .selectFrom("emails")
+  const byCategory = await activeEmails()
     .select(["category"])
     .select(db.fn.countAll().as("count"))
     .groupBy("category")
     .orderBy("count", "desc")
     .execute();
 
-  const byPriority = await db
-    .selectFrom("emails")
+  const byPriority = await activeEmails()
     .select(["priority"])
     .select(db.fn.countAll().as("count"))
     .groupBy("priority")
     .orderBy("count", "desc")
     .execute();
 
-  const topSenders = await db
-    .selectFrom("emails")
+  const topSenders = await activeEmails()
     .select((eb) => [eb.ref("from_address").as("sender")])
     .select(db.fn.countAll().as("count"))
     .groupBy("from_address")
@@ -38,8 +41,7 @@ statisticsRouter.get("/statistics", async (_req, res) => {
     .limit(10)
     .execute();
 
-  const topTopics = await db
-    .selectFrom("emails")
+  const topTopics = await activeEmails()
     .select(["topic"])
     .select(db.fn.countAll().as("count"))
     .groupBy("topic")
@@ -116,7 +118,7 @@ statisticsRouter.get("/emails", async (req, res) => {
     : "received_at";
   const order = orderRaw === "asc" ? "asc" : "desc";
 
-  let q = db.selectFrom("emails");
+  let q = activeEmails();
   if (category) q = q.where("category", "=", category);
   if (sender) q = q.where("from_address", "=", sender);
   if (topic) q = q.where("topic", "=", topic);
@@ -179,4 +181,11 @@ statisticsRouter.get("/emails/:id", async (req, res) => {
     addressOf(parsed.headers["to"] ?? parsed.headers["delivered-to"]);
 
   res.json({ ...email, body_text, to_address, actions });
+});
+
+// Hide an email from the inbox/statistics (soft delete).
+statisticsRouter.post("/emails/:id/dismiss", async (req, res) => {
+  const id = req.params.id;
+  await dismissEmail(id);
+  res.json({ ok: true, dismissed: true, id });
 });

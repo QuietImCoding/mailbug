@@ -455,6 +455,35 @@ textarea.field {
   content: " ✓";
 }
 
+/* One-time codes fade out and drop away once used. */
+.code-item.removing {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Dismiss button on each email row. */
+.dismiss-button {
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.45;
+  padding: 4px;
+}
+
+.dismiss-button:hover,
+.dismiss-button:focus-visible {
+  opacity: 1;
+  color: var(--pri-high);
+}
+
+.row-head .dismiss-button {
+  flex: 0 0 auto;
+}
+
 /* --------------------------------------------------------------- controls */
 
 .inbox-controls {

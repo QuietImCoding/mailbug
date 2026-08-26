@@ -12,6 +12,7 @@ export interface EmailRow {
   body_text: string;
   raw_json: string;
   llm_json: string;
+  dismissed_at: string;
   created_at: string;
 }
 

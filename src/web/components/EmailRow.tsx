@@ -109,6 +109,7 @@ interface Props {
   blocked: boolean;
   onToggle: (id: string | null) => void;
   onBlock: (address: string) => void;
+  onDismiss: (emailId: string) => void;
   onToast: (message: string) => void;
   onTrigger: (emailId: string, actionType: string, label: string) => void;
 }
@@ -121,6 +122,7 @@ export function EmailRow({
   blocked,
   onToggle,
   onBlock,
+  onDismiss,
   onToast,
   onTrigger,
 }: Props) {
@@ -169,6 +171,18 @@ export function EmailRow({
               </div>
             </div>
             <div className="priority-badge">pri: {email.priority}</div>
+            <button
+              type="button"
+              className="dismiss-button"
+              title="dismiss"
+              aria-label="Dismiss email"
+              onClick={(event) => {
+                event.stopPropagation();
+                onDismiss(email.id);
+              }}
+            >
+              ✕
+            </button>
           </div>
 
           <div className="body">
@@ -212,6 +226,18 @@ export function EmailRow({
               onTrigger={onTrigger}
             />
           ) : null}
+          <button
+            type="button"
+            className="dismiss-button"
+            title="dismiss"
+            aria-label="Dismiss email"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDismiss(email.id);
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

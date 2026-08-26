@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   blockSender,
+  dismissEmail,
   fetchBlocked,
   fetchEmail,
   fetchEmails,
@@ -178,6 +179,25 @@ export function App() {
     [show],
   );
 
+  const handleDismiss = useCallback(
+    async (emailId: string) => {
+      try {
+        await dismissEmail(emailId);
+      } catch {
+        show("couldn't dismiss that email");
+        return;
+      }
+      setDetails((prev) => {
+        const next = { ...prev };
+        delete next[emailId];
+        return next;
+      });
+      setReloadKey((key) => key + 1);
+      show("email dismissed");
+    },
+    [show],
+  );
+
   const items = list?.items ?? [];
   const priorities =
     stats?.priorities && stats.priorities.length > 0
@@ -238,6 +258,7 @@ export function App() {
                 blocked={blocked.has(email.from_address.toLowerCase())}
                 onToggle={setOpenId}
                 onBlock={(address) => void handleBlock(address)}
+                onDismiss={(emailId) => void handleDismiss(emailId)}
                 onToast={show}
                 onTrigger={(emailId, actionType, label) =>
                   void handleTrigger(emailId, actionType, label)

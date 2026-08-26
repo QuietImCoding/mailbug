@@ -54,6 +54,7 @@ export async function storeEmail(
       body_text: email.bodyText,
       raw_json: JSON.stringify(c),
       llm_json: llm ? JSON.stringify(llm) : "",
+      dismissed_at: "",
       created_at: now,
     })
     .execute();
@@ -120,6 +121,14 @@ export async function getLastIngestedAt(): Promise<string | null> {
     .where("id", "=", 1)
     .executeTakeFirst();
   return row?.last_ingested_at ?? null;
+}
+// Hides an email from the inbox/statistics by stamping a dismissed timestamp.
+export async function dismissEmail(id: string): Promise<void> {
+  await db
+    .updateTable("emails")
+    .set({ dismissed_at: new Date().toISOString() })
+    .where("id", "=", id)
+    .execute();
 }
 
 export async function setLastIngestedAt(iso: string): Promise<void> {

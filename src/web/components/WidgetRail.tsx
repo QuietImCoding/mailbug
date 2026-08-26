@@ -112,7 +112,7 @@ function CalendarWidget({
   );
 }
 
-function CodeButton({ code }: { code: string }) {
+function CodeButton({ code, onUsed }: { code: string; onUsed: () => void }) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -128,7 +128,10 @@ function CodeButton({ code }: { code: string }) {
       title="click to copy"
       onClick={() => {
         void navigator.clipboard.writeText(code).then(
-          () => setCopied(true),
+          () => {
+            setCopied(true);
+            onUsed();
+          },
           () => setCopied(false),
         );
       }}
@@ -139,6 +142,21 @@ function CodeButton({ code }: { code: string }) {
 }
 
 function CodesWidget({ codes }: { codes: Widgets["codes"] }) {
+  const [used, setUsed] = useState<Set<string>>(new Set());
+  const [removing, setRemoving] = useState<Set<string>>(new Set());
+
+  const markUsed = (code: string) => {
+    setRemoving((prev) => new Set(prev).add(code));
+    setTimeout(() => {
+      setRemoving((prev) => {
+        const next = new Set(prev);
+        next.delete(code);
+        return next;
+      });
+      setUsed((prev) => new Set(prev).add(code));
+    }, 400);
+  };
+
   if (codes.length === 0) {
     return (
       <div className="codes">
@@ -151,12 +169,18 @@ function CodesWidget({ codes }: { codes: Widgets["codes"] }) {
 
   return (
     <div className="codes">
-      {codes.slice(0, 2).map((entry) => (
-        <div className="code-item" key={entry.emailId}>
-          <div className="label">code from {entry.domain}:</div>
-          <CodeButton code={entry.code} />
-        </div>
-      ))}
+      {codes
+        .slice(0, 2)
+        .filter((entry) => !used.has(entry.code))
+        .map((entry) => (
+          <div
+            className={removing.has(entry.code) ? "code-item removing" : "code-item"}
+            key={entry.emailId}
+          >
+            <div className="label">code from {entry.domain}:</div>
+            <CodeButton code={entry.code} onUsed={() => markUsed(entry.code)} />
+          </div>
+        ))}
     </div>
   );
 }

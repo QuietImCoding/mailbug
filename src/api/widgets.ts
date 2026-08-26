@@ -96,7 +96,7 @@ widgetsRouter.get("/widgets", async (_req, res) => {
             .whereRef("blocked_senders.address", "=", "emails.from_address"),
         ),
       ),
-    )
+    ).where("dismissed_at", "=", "")
     .orderBy("received_at", "desc")
     .limit(300)
     .execute();

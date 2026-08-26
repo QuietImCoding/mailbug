@@ -23,6 +23,7 @@ export interface EmailListItem {
 export interface EmailDetail extends EmailListItem {
   to_address: string;
   body_text: string;
+  llm_json: string;
 }
 
 export interface Statistics {
@@ -138,6 +139,10 @@ export async function triggerAction(
     body: JSON.stringify({ actionType }),
   });
   if (!res.ok) throw new Error(`could not trigger ${actionType}`);
+}
+export async function dismissEmail(emailId: string): Promise<void> {
+  const res = await fetch(`/api/emails/${emailId}/dismiss`, { method: "POST" });
+  if (!res.ok) throw new Error("could not dismiss email");
 }
 export interface MailConfig {
   categories: Array<{ key: string; prompt: string; priority: number }>;
