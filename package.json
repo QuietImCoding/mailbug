@@ -5,10 +5,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently -k -n api,web -c magenta,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
+    "dev:api": "INNGEST_DEV=1 tsx src/server.ts",
+    "dev:web": "vite",
+    "build": "vite build",
+    "start": "tsx src/server.ts",
     "test": "node --import tsx --test test/api.test.ts",
-    "dev": "INNGEST_DEV=1 tsx src/server.ts",
     "db:reset": "tsx src/db/reset.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.web.json"
   },
   "keywords": [],
   "author": "",
@@ -29,11 +33,18 @@
     "kysely": "^0.29.5",
     "openai": "^7.5.0",
     "prettier": "^3.9.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.3.0",
-    "tsx": "^4.23.12"
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
+    "concurrently": "^10.0.5",
+    "tsx": "^4.23.12",
+    "vite": "^8.2.2"
   }
 }
