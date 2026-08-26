@@ -10,7 +10,7 @@ import { ingestEmails, runAction } from "./inngest/functions.ts";
 await initDb();
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: process.env.BODY_LIMIT ?? "10mb" }));
 
 app.use("/api/inngest", serve({ client: inngest, functions: [ingestEmails, runAction] }));
 app.use("/api", statisticsRouter);
